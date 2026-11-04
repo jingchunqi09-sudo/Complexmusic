@@ -1,0 +1,61 @@
+# ============================================================
+#  换行与二进制处理规则
+#  core.autocrlf=true 会把 .fs/.bin 当成文本转换，导致位流损坏
+#  （实测：20,778,247 B -> 20,748,342 B，烧录必然失败）
+#  本文件优先级高于 git config，必须随仓库分发
+# ============================================================
+
+# 默认由 Git 自行判断，文本统一以 LF 存储
+* text=auto eol=lf
+
+# ---------- 二进制：禁止任何转换 ----------
+*.fs       binary
+*.bin      binary
+*.pdf      binary
+*.epro2    binary
+*.epru     binary
+*.zip      binary
+*.7z       binary
+*.rar      binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.bmp      binary
+*.webp     binary
+*.ico      binary
+*.vcd      binary
+*.wlf      binary
+*.wdb      binary
+*.qdb      binary
+*.stl      binary
+
+# ---------- Windows 批处理：必须 CRLF ----------
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+
+# ---------- RTL 与工程文件：LF ----------
+*.v        text eol=lf
+*.vh       text eol=lf
+*.sv       text eol=lf
+*.svh      text eol=lf
+*.gprj     text eol=lf
+*.cst      text eol=lf
+*.sdc      text eol=lf
+*.tcl      text eol=lf
+
+# ---------- 软件与脚本：LF ----------
+*.c        text eol=lf
+*.cpp      text eol=lf
+*.h        text eol=lf
+*.hpp      text eol=lf
+*.py       text eol=lf
+*.ps1      text eol=lf
+*.json     text eol=lf
+*.ini      text eol=lf
+*.csv      text eol=lf
+*.scad     text eol=lf
+*.md       text eol=lf
+*.txt      text eol=lf
+*.hex      text eol=lf
+*.svg      text eol=lf
