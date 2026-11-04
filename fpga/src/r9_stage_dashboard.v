@@ -85,17 +85,17 @@ module r9_stage_dashboard(
     // 闪烁位仍在时序块里（gd_frame）。
     wire [10:0] g_xl = (i_guide_fret==5'd0) ? 11'd4  : fret_x(i_guide_fret-1'b1);
     wire [10:0] g_xr = (i_guide_fret==5'd0) ? 11'd20 : fret_x(i_guide_fret);
-    // R58：**不再声明 g_yc**（小提琴指引行坐标）。
-    // 小提琴指引已删除（它读 i_fret_bus / i_left_valid，属于给左手总线加载，见下方说明）。
-    // 尤克里里用自己的行表 uke_yc —— 它对 lane>=4 也算得对，不会被 174+lane*40 带出琴颈。
+    // g_yc：小提琴四行的行中心，174 + lane*40（lane 0..3 → 174 / 214 / 254 / 294）。
+    // 只对 lane<4 有意义：lane=4 会算出 334，超出琴颈 154..314，
+    // 所以尤克里里另用自己的行表 uke_yc（见下），不复用这一个。
+    wire [9:0]  g_yc = 10'd174 + ({8'd0,i_guide_lane}<<5) + ({8'd0,i_guide_lane}<<3);
     // R54：尤克里里弦指引（lane 4..7）。行号 = lane-4。
     //
-    // 三处刻意的低风险写法：
+    // 三处刻意的低风险写法（多模型评审 B1/B3 一致要求）：
     //   ① 行中心用 4 选 1 常量表，**不用加法器** —— 和 ncy 的 174+40r 等价，
     //      但不会给 neck 那串比较器再接一个"移位+加"的新支路。
-    //   ② **不读 i_gates / i_instruments**（R58 起）：指引只指位置，不判断弹对没有。
-    //      这样对发声门控（gate_bus）的扇出增量为 0 —— R54 的"命中变绿"要读
-    //      i_gates[uke_row]，本轮去掉，换来与发声链彻底无关。
+    //   ② 命中判据 uke_hit_r **在时序块里打一拍**，颜色级只读 1 bit 寄存器，
+    //      不在组合路径上直接索引 i_gates/i_instruments（hold 只有 184 ps）。
     //   ③ i_guide_lane 是 3 位，天然只可能是 0..7，uke_row 不会折回。
     function [9:0] uke_row_y;
         input [1:0] r;
@@ -106,33 +106,7 @@ module r9_stage_dashboard(
     wire [1:0] uke_row  = i_guide_lane[1:0];
     wire       uke_on   = (i_mode==2'd0) && i_guide_valid && i_guide_lane[2];
     wire [9:0] uke_yc   = uke_row_y(uke_row);
-
-    // ---------------------------------------------------------------------
-    // R60：**小提琴品格指引（lane 0..3）—— 恢复 R54 的形态，但零负载**
-    //
-    // R54 原来那段读 `i_fret_bus[i_guide_lane*5 +: 5]` 与 `i_left_valid[i_guide_lane]`
-    // 来做"按对了变绿"，等于给左手选品总线加 20 位 4 选 1 MUX + 5 位比较 ×2。
-    // R44 与 R57 都因此出事（见下方长注释）。
-    //
-    // 本版按用户"**左手只显示指引按钮，不显示实时按压**"的要求，
-    // **完全不读左手总线**：只用 i_guide_lane / i_guide_fret / i_guide_valid / i_mode
-    // + 像素坐标。颜色固定琥珀，不做命中变绿 → 对 gate_bus 的扇出增量为 0。
-    //
-    // 行中心沿用 4 选 1 常量表（174/214/254/294），**不写 174+40r 的加法**，
-    // 避免给 neck 那串比较器再接一条"移位+加"的新支路。
-    // 注意常量必须是 3 位：`i_guide_lane < 2'd4` 里 2'd4 会被截成 0，条件恒假
-    // （R33 的原始代码就是这个 bug，导致小提琴框从来没显示过）。
-    // ---------------------------------------------------------------------
-    function [9:0] vln_row_y;
-        input [1:0] r;
-        begin case(r)
-        0:vln_row_y=10'd174;1:vln_row_y=10'd214;2:vln_row_y=10'd254;default:vln_row_y=10'd294;
-        endcase end
-    endfunction
-    wire [1:0] vln_row = i_guide_lane[1:0];
-    wire       vln_on  = (i_mode==2'd0) && i_guide_valid && (i_guide_lane < 3'd4);
-    wire [9:0] vln_yc  = vln_row_y(vln_row);
-    // R58：不再有 uke_hit_r —— 命中反馈已去掉，指引与 gate_bus 完全无关。
+    reg        uke_hit_r;
     reg [3:0]  gd_frame;
     wire       guide_blink = gd_frame[3];
     reg [9:0] y1,y2;
@@ -170,12 +144,12 @@ module r9_stage_dashboard(
         mask_data1<=mask_rom[mask_address];x1<=x;y1<=y;x2<=x1;y2<=y1;
         x_frame1<=x;x_neck1<=x;x_vio1<=x;x_levels1<=x;x_spec1<=x;
         y_frame1<=y;y_neck1<=y;y_vio1<=y;y_levels1<=y;y_spec1<=y;
-        // R33：指引闪烁（每 8 帧翻转一次，约 0.13 s @60 fps）
+        // R33：指引框闪烁（每 8 帧翻转一次，约 0.13 s @60 fps）
         if(reset) gd_frame<=4'd0;
         else if(frame_start) gd_frame<=gd_frame+4'd1;
-        // R58：删掉了 uke_hit_r <= (i_instruments==4'hf) && i_gates[uke_row];
-        //      这条会给 i_gates（= 发声门控 gate_bus 的视图副本）增加一个消费者。
-        //      指引不再判断"弹对没有"，只指位置。
+        // R54：uke 命中位打一拍（见上面 ②）。i_gates 是 view 选过的，
+        // 只有当前确实是 uke（4'hf）才算命中，否则小提琴的 gate 会让 uke 行误绿。
+        uke_hit_r <= (i_instruments==4'hf) && i_gates[uke_row];
         // Split spectrum selection from height/colour arithmetic.  The
         // previous x_spec1 -> spec2 path combined a variable part-select,
         // shift and compares and was the worst full-PNR video path.
@@ -290,89 +264,65 @@ module r9_stage_dashboard(
         if(x_neck1>=57 && x_neck1<67 && (y_neck1>=164 && y_neck1<184 || y_neck1>=244 && y_neck1<264)) neck_c=24'hA4ADB2;
         if(x_neck1>=81 && x_neck1<91 && (y_neck1>=204 && y_neck1<224 || y_neck1>=284 && y_neck1<304)) neck_c=24'hA4ADB2;
         if(y_neck1>=322 && y_neck1<328) for(fi=1;fi<=16;fi=fi+1) if(x_neck1==fret_x(fi)) neck_c=24'h63747F;
-        // ================= R58：演奏指引（纯显示，零负载加到发声相关信号）=================
-        // 本轮按"指引只起指引作用、完全不参与发声"重做。
+        // ---- R54：GUIDE 页曲谱指引。小提琴（lane 0..3）与尤克里里（lane 4..7）各一套 ----
         //
-        // **小提琴指引已删除**，原因是硬的（不是偏好）：
-        //   它的命中判定要读 i_fret_bus[i_guide_lane*5 +: 5] 和 i_left_valid[i_guide_lane]，
-        //   等于给"左手选品总线 + 左手有效"新增 20 位 4 选 1 MUX + 5 位比较 ×2。
-        //   项目里有两次同型事故：
-        //     · R44 只给灯接了 .i_fret_bus(fret) 一行 → 布局漂移 → 左手选品被拖坏，整版作废
-        //     · R38 把 16 根 50 MHz 翻转的 pcm 拉进链路模块 → 实板 S1/S2 自鸣
-        //       （解法是"从下游已寄存的输出取样，保证扇出/走线/翻转率与上一版一致"）
-        //   小提琴框在 2'd4 那个位宽 bug 下**一直是被综合器优化掉的**，所以 R54 的网表里
-        //   本来就没有这块。R57 把它修活 = 凭空给左手总线加了负载，实测比 R55 更差。
-        //   → 结论：删。用户此前也说过"资源不够就删小提琴指引"。
+        // 小提琴：品格框，黄=还没按到，绿=按对了（R33 规则；本版只把坐标从 reg 改成 wire）
+        // 尤克里里：该行上下各 3 px 横线 + 最左空弦块填实；该弦真的在响时变绿
         //
-        // **尤克里里指引（lane 4..7）只用曲谱侧信号**：
-        //   i_guide_lane / i_guide_fret / i_guide_valid / i_mode / 像素坐标。
-        //   不读 i_fret_bus、不读 i_left_valid、**也不读 i_gates / i_instruments**。
-        //   也就是说：指引只告诉"该弹哪根弦、哪个品"，**不判断你弹对没有**，
-        //   对发声链（gate_bus / 选弦 / 包络）的扇出增量为 0。
-        //   （R54 里的"命中变绿"要读 i_gates[uke_row]，本轮去掉，换来与发声链彻底无关。）
-
-        // ---- R60：小提琴（lane 0..3）—— 左手品格 + 右手弦，纯显示侧 ----
-        // 与尤克里里同一套画法，只是行坐标用 vln_yc（lane 0..3 -> 174/214/254/294）。
-        //   yc-8 .. yc-6   上弦线        yc+20 .. yc+22 下弦线
-        //   yc-5 .. yc+19  目标品格整格   （fret>=1）
-        //   x 46..112      空弦区填实     （fret==0）
-        //   x 4..20        最左锚点块
-        // 颜色：固定琥珀 E9B353（品格用更亮的 F0C020）。**不做命中变绿**。
-        if (vln_on && guide_blink) begin
-            if (x_neck1>=46 && x_neck1<560) begin
-                if (y_neck1+8>=vln_yc && y_neck1+8<vln_yc+3)
-                    neck_c = 24'hE9B353;
-                if (y_neck1<=vln_yc+22 && y_neck1>vln_yc+19)
-                    neck_c = 24'hE9B353;
+        // 两边共用 g_xl / g_xr 定 x 范围，y 各自取行中心：
+        //   小提琴 g_yc  = 174 + lane*40（lane 0..3 → 174 / 214 / 254 / 294）
+        //   尤克里里 uke_yc 用 4 选 1 常量表 —— **不能复用 g_yc**，lane=4 会算到 334，
+        //   超出琴颈 154..314，这正是 R33 当年只能写 lane<4 的原因。
+        // ---- 小提琴：品格框 + 空弦块 ----
+        if (i_mode==0 && i_guide_valid && i_guide_lane<2'd4 && guide_blink) begin
+            if(x_neck1>=g_xl && x_neck1<=g_xr && y_neck1+8>=g_yc && y_neck1<=g_yc+22) begin
+                // 只在边框上着色，保留格内原有的按品填充
+                if(x_neck1==g_xl || x_neck1==g_xr || y_neck1+8==g_yc || y_neck1==g_yc+22)
+                    neck_c = (i_fret_bus[i_guide_lane*5 +: 5] == i_guide_fret &&
+                              i_left_valid[i_guide_lane]) ? 24'h28E070 : 24'hF0C020;
             end
-            if (i_guide_fret!=5'd0 &&
-                x_neck1>=g_xl && x_neck1<=g_xr &&
-                y_neck1+5>=vln_yc && y_neck1<=vln_yc+19)
-                neck_c = 24'hF0C020;
-            if (i_guide_fret==5'd0 && x_neck1>=46 && x_neck1<112 &&
-                y_neck1+8>=vln_yc && y_neck1<=vln_yc+22)
-                neck_c = 24'hE9B353;
-            if (x_neck1>=4 && x_neck1<20 && y_neck1+8>=vln_yc && y_neck1<=vln_yc+22)
-                neck_c = 24'hE9B353;
+            // 空弦目标：琴枕左侧整块闪一下，便于一眼看到
+            if(i_guide_fret==5'd0 && x_neck1>=4 && x_neck1<20 &&
+               y_neck1+8>=g_yc && y_neck1<=g_yc+22)
+                neck_c = (i_fret_bus[i_guide_lane*5 +: 5] == 5'd0 &&
+                          i_left_valid[i_guide_lane]) ? 24'h28E070 : 24'hF0C020;
         end
-
-        // ---- 尤克里里（lane 4..7）：左手品 + 右手弦 ----
-        //   右手弦 —— 该行上下各 3 px 横线（x 46..560）+ 空弦区填实 + 最左锚点块
-        //   左手品 —— 目标品格整格填充（2 组范围比较，不画框）
+        // ---- 尤克里里：弦线 + 空弦块 + 品格框 ----
         //
-        // 纵向分层（行高 30 px，互不重叠）：
-        //   yc-8 .. yc-6   上弦线       yc-5 .. yc+19  品格整格
+        // 纵向分层（行高 30 px，互不重叠，别再改成重叠版本）：
+        //   yc-8 .. yc-6   上弦线       yc-5        品框上边
+        //   yc-5 .. yc+19  品格内区       yc+19       品框下边
         //   yc+20 .. yc+22 下弦线
+        //
+        // 硬件限制（写清楚，免得以后误判成 bug）：尤克里里 4 根弦**没有按品传感**
+        // （i_fret_bus 只有 20 bit = 4 路，i_left_valid 4 位，都只覆盖琴弦 0..3）。
+        // 所以绿色只能由"这根弦真的响了"（uke_hit_r）触发，**无法验证左手按得准不准**。
         if (uke_on && guide_blink) begin
             // 右手：该弦整行上下提示线
             if (x_neck1>=46 && x_neck1<560) begin
                 if (y_neck1+8>=uke_yc && y_neck1+8<uke_yc+3)
-                    neck_c = 24'hE9B353;
+                    neck_c = uke_hit_r ? 24'h28E070 : 24'hE9B353;
                 if (y_neck1<=uke_yc+22 && y_neck1>uke_yc+19)
-                    neck_c = 24'hE9B353;
+                    neck_c = uke_hit_r ? 24'h28E070 : 24'hE9B353;
             end
-            // 左手：目标品格**整格填充**（R56 从"画边框"改过来）。
-            //
-            // 为什么不用边框：边框要 4 组范围比较（x>=g_xl / x<=g_xr / y+5>=yc / y<=yc+19）
-            // 外加 4 组 11 位等式比较（x==g_xl / x==g_xr / y+5==yc / y==yc+19），
-            // 一共 8 个比较器压在 neck_c 这条已经很挤的组合链上。
-            // 改成整格填充后只剩 2 组范围比较，等式比较全部消失。
-            //
-            // 画面效果反而更好：整格高亮（约 38 px 宽 × 25 px 高）在 2~3 米外
-            // 比 1 px 边框醒目得多，也更容易和"按品填充"的亮度区分。
+            // 左手：目标品格框。空弦（fret=0）不画框 —— 左侧空弦块填实已表达"空弦"，
+            // 再画框会和它叠在一起；fret>=1 时 g_xl>=112，永远不会碰到那块。
             if (i_guide_fret!=5'd0 &&
                 x_neck1>=g_xl && x_neck1<=g_xr &&
-                y_neck1+5>=uke_yc && y_neck1<=uke_yc+19)
-                neck_c = 24'hF0C020;
+                y_neck1+5>=uke_yc && y_neck1<=uke_yc+19) begin
+                if (x_neck1==g_xl || x_neck1==g_xr ||
+                    y_neck1+5==uke_yc || y_neck1==uke_yc+19)
+                    neck_c = uke_hit_r ? 24'h28E070 : 24'hF0C020;
+            end
             // 空弦：琴枕左侧的空弦区（x 46..112）整块填实。
             // 多模型评审一致指出：只靠屏幕最左那 16 px（x 4..20）在 2~3 米外太弱，
             // 而"空弦"恰恰是唯一没有品框可指的情况，必须有个靠得住的大目标。
             if (i_guide_fret==5'd0 && x_neck1>=46 && x_neck1<112 &&
                 y_neck1+8>=uke_yc && y_neck1<=uke_yc+22)
-                neck_c = 24'hE9B353;
+                neck_c = uke_hit_r ? 24'h28E070 : 24'hE9B353;
             // 最左空弦块填实（哪根弦的第三个锚点，远处也能一眼看到）
             if (x_neck1>=4 && x_neck1<20 && y_neck1+8>=uke_yc && y_neck1<=uke_yc+22)
-                neck_c = 24'hE9B353;
+                neck_c = uke_hit_r ? 24'h28E070 : 24'hE9B353;
         end
         // Four-bit category + depth-shading mask; both align with x/y copies.
         px=x_vio1[0] ? mask_data1[3:0] : mask_data1[7:4];my=y_vio1[8:0]-9'd106;

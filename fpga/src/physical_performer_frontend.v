@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
 `include "left_hand_vote_config.vh"
-`include "latency_profile.vh"
 // Sensor transactions -> independent controllers -> registered eight-voice bank.
 // No packet parser or shared instrument-switching state in the performer path.
 module physical_performer_frontend #(
@@ -45,7 +44,13 @@ module physical_performer_frontend #(
     // R17：拍琴身（琴体传导）被判为非音符事件时转成的颤音深度（0..63）
     output wire [7:0] piezo_vibrato,
     // R25：8 lane 定弦（来自 ESP32，透传给 performer_pitch_map）
-    input wire [55:0] i_tune
+    input wire [55:0] i_tune,
+    // R52：选弦控制（来自 link_regs 的 REG_SEL_*，全部默认中性 = 与 R51 行为一致）
+    input  wire [7:0] i_sel_thr,      // 选弦门限，0 = 用编译期 PIEZO_SELECT_MIN
+    input  wire       i_sel_freeze,   // 琴体事件冻结投票
+    input  wire       i_sel_manual,   // 手动强制使能
+    input  wire [2:0] i_sel_force,    // 0=自动，1..4=强制第几根弦
+    output wire [7:0] o_sel_stat      // 只读：{3'd0, enabled, pick[3:0]}
 );
     wire signed [15:0] dx,dy;
     wire paw_ready,paw_error,paw_valid;
@@ -129,9 +134,7 @@ module physical_performer_frontend #(
     wire p_valid,p_initialized,p_fault;
     wire [1:0] p_channel;
     wire [11:0] p_value;
-    ad7091r4_sensor_adapter #(.CLOCK_HZ(CLOCK_HZ),
-        .SAMPLE_GAP_CLKS(`R61_PIEZO_SAMPLE_GAP),
-        .SPI_HALF_PERIOD_CLKS(`R61_PIEZO_SPI_HALF)) u_piezo(
+    ad7091r4_sensor_adapter #(.CLOCK_HZ(CLOCK_HZ),.SAMPLE_GAP_CLKS(1060)) u_piezo(
         .clk_50m(clk_50m),.reset(reset),.adc_sclk(piezo_sclk),.adc_mosi(piezo_mosi),
         .adc_miso(piezo_miso),.adc_cs_n(piezo_cs_n),.adc_convst_n(piezo_convst_n),
         .adc_reset_n(piezo_reset_n),.adc_busy_n(piezo_busy_n),.sample_valid(p_valid),
@@ -200,6 +203,7 @@ module physical_performer_frontend #(
     piezo_string_vote #(.SELECT_MIN(PIEZO_SELECT_MIN),.DIV_BITS(16),
         .VOTE_WIN(6),.FALLBACK_MASK(OPEN_BOW_MASK),.START_VOTE(2)) u_vote(
         .clk(clk_50m),.reset(reset),.ay(piezo_ay),.bow_start(bow_start),
+        .thr({8'd0,i_sel_thr}),.freeze(i_sel_freeze),
         .pick(piezo_pick),.pick_eff(piezo_pick_eff),.enabled(piezo_vote_on)
     );
     wire [3:0] selected_fingered=fingered_strings;
@@ -215,17 +219,21 @@ module physical_performer_frontend #(
     //   R23 的 piezo_pick_eff 是多弦 mask、不会回退到 1111，所以那里没这个问题；
     //   R24 换成 one-hot 赢家之后必须分开用。
     wire [3:0] piezo_extra = piezo_pick & ~selected_fingered;
-    // R53：R52 曾在这里插过 force mux（force_hot / force_on / selected_auto），
-    //   实板"S1 乱响不停"。原因是这条线是 selected_strings -> next_gates -> gate_bus
-    //   的**发声门控本身**，多加一级 mux + 一个移位器就推动布局，而本工程
-    //   hold 只有 43~45 ps。**这段永远不要再插回来**（要覆盖选弦请改 vote 内部）。
-    wire [3:0] selected_strings=
+    // R52：手动强制选弦。force 1..4 -> one-hot；命中时**完全覆盖**自动结果，
+    //   包括"已经按了品"的情况 —— 手动指定就是要这根响，不要再让算法插嘴。
+    //   默认 i_sel_manual=0 / i_sel_force=0，force_on 恒 0，行为与 R51 完全一致。
+    wire [3:0] force_hot = (i_sel_force == 3'd0) ? 4'd0
+                          : (4'b0001 << (i_sel_force - 3'd1));
+    wire force_on = i_sel_manual && (force_hot != 4'd0);
+
+    wire [3:0] selected_auto=
         (BOW_MULTI_STRING!=0) ?
             ((selected_fingered!=0) ? (selected_fingered | piezo_extra) :
                 piezo_pick_eff) :
             ((selected_fingered!=0)?(((piezo_pick&selected_fingered)!=0)?
                 (piezo_pick&selected_fingered):selected_fingered):
             ((piezo_pick!=0)?piezo_pick:OPEN_BOW_MASK));
+    wire [3:0] selected_strings = force_on ? force_hot : selected_auto;
     // 只有"确实在运弓"才与拨弦互斥：静止时鼠标 ±1 count 抖动（实测偏置）
     // 不再抑制压电。门限取报告 §4.2 的开弓门限 40。
     // 只抑制正在运弓的那根弦（selected_strings），不是四弦全抑制——
@@ -237,6 +245,9 @@ module physical_performer_frontend #(
     wire [3:0] violin_attack =next_gates[3:0] & ~gate_bus[3:0];
     wire [3:0] violin_release=gate_bus[3:0] & ~next_gates[3:0];
     assign position_bus=192'd0; // audio model's default contact position
+    // R52：选弦状态回读。bit4 = 本窗投票是否可用，bit3..0 = 当前锁定（one-hot）。
+    //   只给寄存器读，不进任何音频门控。
+    assign o_sel_stat = {3'd0, piezo_vote_on, piezo_pick};
     assign sensor_ready={(&left_ready),p_initialized,paw_ready,!bow_lift};
     assign sensor_fault={|left_fault,p_fault,paw_error,1'b0};
     reg [63:0] clock_count;

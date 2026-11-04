@@ -1,5 +1,4 @@
 `timescale 1ns/1ps
-`include "latency_profile.vh"
 // AD7091R-4 H6 acquisition only; no UART formatter or performer policy here.
 // Protocol: ADI Rev. D pp.5/23/30 and the verified R3 test core. Register reads
 // reply in the NEXT SPI frame; conversion CH_ID, not an assumed sequence,
@@ -79,7 +78,7 @@ module ad7091r4_sensor_adapter #(
     parameter integer POWER_WAIT_CLKS = 5000000,
     parameter integer REF_SETTLE_CLKS = 2500000,
     parameter integer RESET_CLKS = CLOCK_HZ/10000,
-    parameter integer SPI_HALF_PERIOD_CLKS = `R61_PIEZO_SPI_HALF,
+    parameter integer SPI_HALF_PERIOD_CLKS = 25,
     parameter integer BUSY_TIMEOUT_CLKS = CLOCK_HZ/10000
 ) (
     input wire clk_50m, input wire reset,

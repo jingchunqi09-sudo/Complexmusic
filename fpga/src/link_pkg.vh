@@ -111,23 +111,14 @@
 `define REG_TONE_BRIGHT          8'h2C   // +0x2D 高字节，12 位（高架 1800Hz）
 `define REG_TONE_CTRL            8'h2E   // bit0 使能  bit1..3 预设号(0=手动)
 `define REG_TONE_CLIP            8'h2F   // 只读 软限幅动作计数低字节
-// R53：R52 的 REG_SEL_MODE/FORCE/THR/STAT(0x30..0x33) **已全部删除**。
-//   原因见 docs/implementation/r53_20261103/README.md：
-//   那套控制把 force mux 插进了 `selected_strings -> next_gates` 这条真正的
-//   发声门控组合路径，并给 piezo_pick 加了扇出 —— 而本工程 hold 余量只有
-//   43~45 ps，任何新增连线都会推动布局，实板表现为"S1 乱响不停"。
-//   选弦手动控制要另立项（先争取时序余量）。
-//
-// R60：**复用 R53 删掉的同一段地址 0x30..0x33，做"演奏指引直控"。**
-//   与 R52 的本质区别：R52 那套接的是 `selected_strings -> next_gates`（发声门控本身），
-//   而这里接的是 `g_lane/g_note/g_valid` —— 它们只喂 `r9_stage_dashboard` 的
-//   `i_guide_lane/i_guide_fret/i_guide_valid`，**没有任何发声侧消费者**。
-//   所以这是"纯显示侧控制"，不改发声行为。
-`define REG_GUIDE_CTRL           8'h30   // bit0 = ESP32 直控使能(1)/曲谱模式(0)  bit1 = 指引有效
-`define REG_GUIDE_LANE           8'h31   // 0..7（0-3 小提琴，4-7 尤克里里）
-`define REG_GUIDE_NOTE           8'h32   // MIDI 0..127，顶层用 note-tune 得品格
-`define REG_PLUCK_CNT            8'h33   // **只读**：起音计数，每个 trigger_bus 非零拍 +1
-`define REG_PLUCK_MASK           8'h34   // **只读**：最近一次起音的弦 mask（bit0=弦1 … bit7=尤4）
-`define REG_MAX                  8'h35
+// ---- R52：选弦控制 --------------------------------------------------------
+// 为什么用通用 REG_WRITE 而不是新命令：`cmd_dispatch.v` 已有 CMD_REG_WRITE/READ，
+// 固件 `writeReg/readReg` 两侧都在用，加寄存器即可控制，**不用动命令分派**
+// （动它要同时改 n_writes/waddr/wdata 三处，是链路里最容易出错的地方）。
+`define REG_SEL_MODE             8'h30   // bit0=手动强制使能  bit1=琴体事件冻结投票
+`define REG_SEL_FORCE            8'h31   // 0=自动  1..4=强制第几根弦（物理弦号，1 起算）
+`define REG_SEL_THR              8'h32   // 选弦绝对门限（Q4 码值），默认 32
+`define REG_SEL_STAT             8'h33   // 只读 bit0..3=pick(one-hot) bit4=本窗投票使能
+`define REG_MAX                  8'h34
 
 `endif

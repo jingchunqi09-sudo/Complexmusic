@@ -88,6 +88,12 @@ module tang_mega_60k_top #(
     // 上电默认值见 src/link_regs.v，逐条等于 R24 的硬编码常量。
     wire [11:0] lk_tone_warm, lk_tone_bright;
     wire        lk_tone_enable;
+    // R52：选弦控制。默认全中性（manual=0/force=0/thr=32），
+    // 与 link_regs 复位值和 LINK_OFF 分支逐位一致。
+    wire        lk_sel_manual, lk_sel_freeze;
+    wire [2:0]  lk_sel_force;
+    wire [7:0]  lk_sel_thr;
+    wire [7:0]  sel_stat;
     wire [15:0] tone_clip;
     wire [7:0]  lk_volume, lk_wet, lk_damping, lk_sens;   // R43: lk_lane_en 删除
     wire [1:0]  lk_tail;
@@ -101,10 +107,6 @@ module tang_mega_60k_top #(
     wire [2:0]  lk_ev_lane;
     wire [6:0]  lk_ev_note, lk_ev_vel;
     wire [7:0]  lk_score_state;
-    // R60：ESP32 直控指引（纯显示侧）+ 起音计数回传
-    wire [7:0]  lk_guide_ctrl, lk_guide_lane, lk_guide_note;
-    wire [7:0]  lk_pluck_cnt;
-    wire [7:0]  lk_pluck_mask;
     wire        lk_pcm_valid;
     wire signed [15:0] lk_pcm;
     wire [7:0]  lk_err, lk_ok, lk_bad, lk_drop;
@@ -131,6 +133,10 @@ module tang_mega_60k_top #(
         .piezo_convst_n(piezo_convst_n),.piezo_reset_n(piezo_reset_n),.piezo_busy_n(piezo_busy_n),
         .note_bus(notes),.gate_bus(gates),.trigger_bus(triggers),.stop_bus(stops),
         .i_tune((LINK_AUDIO_ENABLE!=0) ? lk_tune : 56'd0),
+        // R52：选弦控制（默认中性，等价于 R51）
+        .i_sel_thr(lk_sel_thr), .i_sel_freeze(lk_sel_freeze),
+        .i_sel_manual(lk_sel_manual), .i_sel_force(lk_sel_force),
+        .o_sel_stat(sel_stat),
         .velocity_bus(velocities),.speed_bus(speeds),.position_bus(positions),
         .direction_bus(directions),.view_instrument(view),.event_valid(event_valid),
         .event_sequence(event_sequence),.event_clock(event_clock),.sensor_ready(),.sensor_fault(),.left_status(left_status),
@@ -197,34 +203,6 @@ module tang_mega_60k_top #(
     reg [2:0]  g_lane;
     reg [6:0]  g_note;
     reg        g_valid;
-    // ---------------- R56：曲谱播完后清掉指引目标 ----------------
-    // 为什么必须加这一段：score_player 收到 END 事件时在 S_CMP 里**直接回 IDLE**
-    // （score_player.v:202），不会把 EV_END 发到 lk_ev_*。所以下面这套
-    // "靠 STOP 事件清目标"对"整首播完"完全无效 —— 最后一个音符的指引框会
-    // 永远留在屏幕上闪。R54 只画细弦线时不易察觉，R55 加了黄色品格框之后
-    // 非常显眼，用户看到的就是"指引自己在乱动"。
-    //
-    // 做法：播放状态回 0 之后**再保持 1 s**（够跟完最后一个音），然后清目标。
-    // 没有采用"state==0 立刻清"：R33 实测过单音练习谱会在 1 ms 内播完，
-    // 立刻清会让框只闪一下（见下面那段注释的 G2 点），跟弹没法用。
-    //
-    // 纯显示侧逻辑：只读 lk_score_state，输出 g_valid 的清零条件，
-    // 不进音频链、不改 score_player 状态机、不新增任何模块端口。
-    reg [1:0]  sc_state_d;
-    reg [25:0] g_hold_t;
-    wire       sc_idle = (lk_score_state[1:0] == 2'd0);
-    always @(posedge clk_50m) begin
-        if (reset) begin
-            sc_state_d <= 2'd0;
-            g_hold_t   <= 26'd0;
-        end else begin
-            sc_state_d <= lk_score_state[1:0];
-            // 还在播/暂停，或刚从播放态掉下来 -> 重新计时
-            if (!sc_idle || sc_state_d != 2'd0) g_hold_t <= 26'd0;
-            else if (g_hold_t != 26'h3FF_FFFF) g_hold_t <= g_hold_t + 26'd1;
-        end
-    end
-    wire g_expire = (g_hold_t == 26'd49_999_999);   // 1.0 s @ 50 MHz
     always @(posedge clk_50m) begin
         if (reset) begin
             g_lane  <= 3'd0;
@@ -234,22 +212,6 @@ module tang_mega_60k_top #(
             g_lane  <= 3'd0;
             g_note  <= 7'd0;
             g_valid <= 1'b0;
-        end else if (lk_guide_ctrl[0]) begin
-            // ---------------------------------------------------------------
-            // R60：**ESP32 直控模式**（改由网页「曲谱指引」按钮驱动）。
-            //   写 REG_GUIDE_CTRL(0x30) bit0=1 进入，bit1=指引有效；
-            //   REG_GUIDE_LANE(0x31) = 0..7；REG_GUIDE_NOTE(0x32) = MIDI。
-            //   这里每拍无条件覆盖，所以曲谱事件（lk_ev_*）与 g_expire 全部失效，
-            //   ESP32 完全掌控"现在指哪根弦第几品"。
-            //
-            //   隔离性：g_lane/g_note/g_valid 只喂 r9_stage_dashboard 的
-            //   i_guide_lane/i_guide_fret/i_guide_valid，**没有任何发声侧消费者**
-            //   （已 grep 确认）。所以这条通路不影响选弦、不影响 gate_bus、不影响 PCM。
-            //   退出直控（bit0 写回 0）后，行为立即回到 R54 的曲谱模式。
-            // ---------------------------------------------------------------
-            g_lane  <= lk_guide_lane[2:0];
-            g_note  <= lk_guide_note[6:0];
-            g_valid <= lk_guide_ctrl[1];
         end else if (lk_ev_valid) begin
             if (lk_ev_kind == 2'd2) begin           // STOP：目标消失
                 if (lk_ev_lane == g_lane) g_valid <= 1'b0;
@@ -258,50 +220,12 @@ module tang_mega_60k_top #(
                 g_note  <= lk_ev_note;
                 g_valid <= 1'b1;
             end
-        end else if (g_expire) begin
-            // 放在事件之后：同一拍若有新音符事件，事件优先（重新开始指引不该被超时吃掉）
-            g_valid <= 1'b0;
         end
         // 为什么不在这里判断 score_state==0 就清目标：
         // 短曲谱（比如单音练习只有一个事件）会在 1 ms 内播完、state 立刻回 0，
         // 目标框只闪一下就没，完全没法跟弹（实测 tb_score_guide 的 G2 点）。
         // 改成"保留到下一次事件/STOP/关闭指引"，符合跟弹的实际用法。
-        // R56 补充：正因为如此，整首播完（END 不发事件）时框会一直留着，
-        // 所以上面加了 g_expire（state 回 0 后 1 s 清）。两者合起来是
-        // "播的时候跟着走、播完 1 s 收干净"。
     end
-
-    // ---------------- R60：起音计数（给 ESP32 判断"弹了一下"） ----------------
-    // 输入是 triggers（trigger_bus 的顶层 wire），它是**单拍脉冲**：
-    //   小提琴 = violin_attack（弓起音沿），尤克里里 = p_trigger & ~bow_contact（拨弦）。
-    // 这里只做 8 位计数，供 ESP32 用 CMD_REG_READ 轮询 REG_PLUCK_CNT(0x33)。
-    // 计数回绕即可 —— ESP32 只比较"有没有变化"，不做绝对计数。
-    //
-    // 为什么不用录音做起音检测：`esp32_wifi_console/src/main.cpp:71` 明确记录过
-    // **R38/R39 的 LADPCM 录音版在实板上会让 S1/S2/S3 自鸣**，那条路已证明会
-    // 破坏发声链，本版不再走。
-    //
-    // 代价说明（诚实记录）：这是本方案**唯一**给发声侧信号新增的消费者
-    // （triggers 8 位，扇出 +1）。相比 R44（20 位 i_fret_bus 加扇出）与 R57
-    // （20 位 4 选 1 MUX + 5 位比较 ×2），负载小得多；但构建后必须核对 hold，
-    // 若跌破 0.15 ns 就换 place 重跑。
-    reg [7:0] guide_pluck_cnt;
-    reg [7:0] guide_pluck_mask;
-    wire      trig_any = |triggers;
-    always @(posedge clk_50m) begin
-        if (reset) begin
-            guide_pluck_cnt  <= 8'd0;
-            guide_pluck_mask <= 8'd0;
-        end else if (trig_any) begin
-            // 计数：ESP32 只比较"有没有变化"，回绕即可。
-            // mask：保留**最近一次**起音是哪几根弦（脉冲是单拍的，轮询必然错过，
-            //       所以必须锁存；ESP32 读到 cnt 变化后再读 mask 就能判断是不是目标弦）。
-            guide_pluck_cnt  <= guide_pluck_cnt + 8'd1;
-            guide_pluck_mask <= triggers;
-        end
-    end
-    assign lk_pluck_cnt  = guide_pluck_cnt;
-    assign lk_pluck_mask = guide_pluck_mask;
 
     // 该弦的空弦音高（定弦可被 ESP32 改；AUDIO 关闭时用默认值）
     reg [6:0] g_open;
@@ -368,7 +292,8 @@ module tang_mega_60k_top #(
     // 0 dB 时 pt8211_tx 内部走直通分支，乘法器被常量折叠 —— DAC 输出与 R33 逐位相同。
     wire [7:0] dac_volume = (LINK_VOLUME_ENABLE!=0) ? lk_volume : 8'd128;
     // Preserve the qualified 4V+4U waveguide/TDM schedule and sound parameters.
-    instrument_bank_core #(.SAMPLE_RATE_MILLIHZ(SAMPLE_RATE_MILLIHZ)) u_audio_core(        .i_clk(clk_50m),.i_reset(reset),.i_sample_tick(sample_tick),
+    instrument_bank_core #(.SAMPLE_RATE_MILLIHZ(SAMPLE_RATE_MILLIHZ)) u_audio_core(
+        .i_clk(clk_50m),.i_reset(reset),.i_sample_tick(sample_tick),
         .i_event(ENABLE_AUDIO_SMOKE!=0?smoke_event:aud_ev),
         .i_event_sequence(ENABLE_AUDIO_SMOKE!=0?smoke_sequence:event_sequence),
         .i_event_clock(ENABLE_AUDIO_SMOKE!=0?smoke_clock:event_clock),
@@ -381,10 +306,6 @@ module tang_mega_60k_top #(
         .i_glide_ms(aud_glide),.i_auto_expression(aud_auto),.i_emergency(1'b0),
         .i_fx_bypass(aud_bypass),.i_wet(aud_wet),.i_damping(aud_damp),.i_tail(aud_tail),
         .i_tone_bright(lk_tone_bright),.i_tone_warm(lk_tone_warm),.i_tone_enable(lk_tone_enable),
-        // R62：加法合成振荡器组的测试模式。固件协议未改，这里固定 1'b0 =
-        // 演奏模式（-30 dB 泛音层，音色基本不变）。现场要做"多路谱峰"验证时，
-        // 把这一行改成 1'b1 重新构建即可（只影响这一位，不动任何寄存器）。
-        .i_osc_test(1'b0),
         .o_tone_clip(tone_clip),
         .o_audio_sample(pcm),.o_audio_sample_valid(pcm_valid),.o_audio_first_sample(pcm_event),
         .o_ready(ready),.o_voice_sample_bus(),.o_active_mask(active),.o_body_guards(),.o_body_clips(),
@@ -505,15 +426,12 @@ module tang_mega_60k_top #(
         .o_mute(lk_mute), .o_tune(lk_tune),
         .o_tone_warm(lk_tone_warm), .o_tone_bright(lk_tone_bright),
         .o_tone_enable(lk_tone_enable), .i_tone_clip(tone_clip),
+        .o_sel_manual(lk_sel_manual), .o_sel_freeze(lk_sel_freeze),
+        .o_sel_force(lk_sel_force), .o_sel_thr(lk_sel_thr),
+        .i_sel_stat(sel_stat),
         .o_ev_valid(lk_ev_valid), .o_ev_kind(lk_ev_kind), .o_ev_lane(lk_ev_lane),
         .o_ev_note(lk_ev_note), .o_ev_vel(lk_ev_vel),
         .o_score_state(lk_score_state),
-        // R60：指引直控 + 起音计数（均为显示侧/只读，不接发声链）
-        .i_pluck_cnt(lk_pluck_cnt),
-        .i_pluck_mask(lk_pluck_mask),
-        .o_guide_ctrl(lk_guide_ctrl),
-        .o_guide_lane(lk_guide_lane),
-        .o_guide_note(lk_guide_note),
         // R28：录音/音量抽头**默认不接**（与 R24 一致，硬接 0）。
         // 原因：R25/R26 把真实音频接进 audio_volume + rec_ladpcm 之后，多了一个
         // 18×18 乘法器和一组 16 位寄存器在 48.8 kHz 上持续翻转；R24 时它们是静止的
@@ -556,6 +474,12 @@ module tang_mega_60k_top #(
         assign lk_tone_warm   = 12'h800;
         assign lk_tone_bright = 12'h800;
         assign lk_tone_enable = 1'b1;
+        // R52：关掉链路时选弦控制钉在"全自动"，与 link_regs 复位值一致。
+        // 注意 freeze 必须是 0 —— 置 1 会让投票永久冻结。
+        assign lk_sel_manual = 1'b0;
+        assign lk_sel_freeze = 1'b0;
+        assign lk_sel_force  = 3'd0;
+        assign lk_sel_thr    = 8'd32;
         assign lk_ev_valid    = 1'b0;
         assign lk_ev_kind     = 2'd0;
         assign lk_ev_lane     = 3'd0;

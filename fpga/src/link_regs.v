@@ -56,14 +56,12 @@ module link_regs (
     output wire [11:0] o_tone_warm,
     output wire [11:0] o_tone_bright,
     output wire        o_tone_enable,
-
-    // R60：演奏指引直控（**纯显示侧**，只接顶层 g_lane/g_note/g_valid，
-    //      不接发声链任何信号）。ESP32 用 CMD_REG_WRITE 写 0x30..0x32。
-    input  wire [7:0]  i_pluck_cnt,      // 只读 0x33：起音计数快照
-    input  wire [7:0]  i_pluck_mask,     // 只读 0x34：最近一次起音的弦 mask
-    output wire [7:0]  o_guide_ctrl,     // bit0 直控使能  bit1 指引有效
-    output wire [7:0]  o_guide_lane,
-    output wire [7:0]  o_guide_note
+    // R52：选弦控制
+    output wire        o_sel_manual,     // REG_SEL_MODE bit0
+    output wire        o_sel_freeze,     // REG_SEL_MODE bit1
+    output wire [2:0]  o_sel_force,      // REG_SEL_FORCE[2:0]，0=自动
+    output wire [7:0]  o_sel_thr,        // REG_SEL_THR
+    input  wire [7:0]  i_sel_stat        // 只读：pick + enabled
 );
     `include "link_pkg.vh"
 
@@ -75,9 +73,7 @@ module link_regs (
                  (addr != `REG_SCORE_STATE) &&
                  (addr != `REG_SCORE_POS) &&
                  (addr != `REG_LINK_STAT) &&
-                 (addr != `REG_TONE_CLIP) &&
-                 (addr != `REG_PLUCK_CNT) &&   // R60：起音计数只读
-                 (addr != `REG_PLUCK_MASK);    // R60：起音 mask 只读
+                 (addr != `REG_SEL_STAT);
 
     always @(posedge clk) begin
         if (reset) begin
@@ -126,6 +122,11 @@ module link_regs (
             r[`REG_TONE_BRIGHT]   <= 8'h00;
             r[`REG_TONE_BRIGHT+1] <= 8'h08;
             r[`REG_TONE_CTRL]     <= 8'h01;
+            // R52：选弦控制默认值。MODE=0 / FORCE=0 表示**完全沿用 R51 的自动行为**，
+            // 上电时与 R51 逐位一致；THR=32 与原来写死的 PIEZO_SELECT_MIN 同值。
+            r[`REG_SEL_MODE]      <= 8'h00;
+            r[`REG_SEL_FORCE]     <= 8'h00;
+            r[`REG_SEL_THR]       <= 8'd32;
         end else if (we && wr_ok) begin
             r[addr] <= wdata;
         end
@@ -137,8 +138,7 @@ module link_regs (
             `REG_SCORE_POS:   rdata = i_score_pos[7:0];
             `REG_LINK_STAT:   rdata = i_err_count;
             `REG_TONE_CLIP:   rdata = i_tone_clip[7:0];
-            `REG_PLUCK_CNT:   rdata = i_pluck_cnt;   // R60 只读
-            `REG_PLUCK_MASK:  rdata = i_pluck_mask;  // R60 只读
+            `REG_SEL_STAT:    rdata = i_sel_stat;
             default:          rdata = (raddr < `REG_MAX) ? r[raddr] : 8'd0;
         endcase
     end
@@ -174,8 +174,9 @@ module link_regs (
     assign o_tone_warm   = {r[`REG_TONE_WARM+1][3:0],   r[`REG_TONE_WARM]};
     assign o_tone_bright = {r[`REG_TONE_BRIGHT+1][3:0], r[`REG_TONE_BRIGHT]};
     assign o_tone_enable = r[`REG_TONE_CTRL][0];
-    // R60：指引直控。默认全 0 = 直控关闭，曲谱模式与 R54 完全一致。
-    assign o_guide_ctrl  = r[`REG_GUIDE_CTRL];
-    assign o_guide_lane  = r[`REG_GUIDE_LANE];
-    assign o_guide_note  = r[`REG_GUIDE_NOTE];
+    // R52：选弦控制
+    assign o_sel_manual  = r[`REG_SEL_MODE][0];
+    assign o_sel_freeze  = r[`REG_SEL_MODE][1];
+    assign o_sel_force   = r[`REG_SEL_FORCE][2:0];
+    assign o_sel_thr     = r[`REG_SEL_THR];
 endmodule

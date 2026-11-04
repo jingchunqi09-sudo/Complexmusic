@@ -1,6 +1,5 @@
 `timescale 1ns/1ps
 `default_nettype none
-`include "latency_profile.vh"
 //-----------------------------------------------------------------------------
 // piezo_string_det.v —— 右手压电识别（R17，2026-11-01）
 //
@@ -64,17 +63,17 @@ module piezo_string_det #(
     // ---- 前端（与 fs 绑定）----
     parameter integer HP_K = 249,       // 55 Hz 高通 a = 249/256（两级）
     parameter integer LP_K = 81,        // 900 Hz 低通 b = 81/256
-    parameter integer EF_S = `R61_PIEZO_EF_S, // 快包络 τ = 32 样本 = 0.64 ms @50 kHz
+    parameter integer EF_S = 5, // 快包络 τ = 32 样本 = 0.64 ms @50 kHz
     parameter integer ES_S = 8,         // 慢包络 τ = 256 样本 ≈ 5.1 ms @50 kHz
-    parameter integer LAG  = `R61_PIEZO_LAG,  // 增长比回看窗 3 ms（0.59τ，与 R60 同比例）
+    parameter integer LAG  = 148,  // 增长比回看窗 3 ms（0.59τ，与 R60 同比例）
     // ---- 时间量，单位 = 通道样本数（fs = 50 kHz，单通道口径）----
     // R61：全部改为宏，真源在 src/latency_profile.vh 第三节。
-    parameter integer WIN_MS   = `R61_PIEZO_WIN_MS,    // 合并/判决窗
-    parameter integer DEAD_MS  = `R61_PIEZO_DEAD_MS,   // 逐通道死区
-    parameter integer REFR_H_MS= `R61_PIEZO_REFR_H_MS, // 全局硬消抖（无条件吸收）
-    parameter integer REFR_S_MS= `R61_PIEZO_REFR_S_MS, // 全局软消抖（只吸收弱跟随者）
-    parameter integer WARM_MS  = `R61_PIEZO_WARM_MS,   // 启动消隐，等滤波器收敛
-    parameter integer FS_HZ    = `R61_PIEZO_FS_HZ,
+    parameter integer WIN_MS   = 8,    // 合并/判决窗
+    parameter integer DEAD_MS  = 60,   // 逐通道死区
+    parameter integer REFR_H_MS= 24, // 全局硬消抖（无条件吸收）
+    parameter integer REFR_S_MS= 60, // 全局软消抖（只吸收弱跟随者）
+    parameter integer WARM_MS  = 250,   // 启动消隐，等滤波器收敛
+    parameter integer FS_HZ    = 24900,
     parameter integer REVERSE_CHANNELS = 1,
     // ---- 每通道直流与门限（与采集固件同源；生产板增益不同需重标）----
     parameter integer DC0 = 2051, DC1 = 2050, DC2 = 2050, DC3 = 1882,

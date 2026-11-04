@@ -13,7 +13,7 @@
   "press_percent": 71,
   "release_percent": 22,
   "common_cells": 8,
-  "group_scans": 2,
+  "group_scans": 4,
   "use_diff": 0,
   "t_diff": 120,
   "channel_frets": [
@@ -40,7 +40,7 @@
       "window_rounds": 20
     },
     "contest": {
-      "slot_ticks": 16000,
+      "slot_ticks": 62500,
       "window_rounds": 1
     }
   },

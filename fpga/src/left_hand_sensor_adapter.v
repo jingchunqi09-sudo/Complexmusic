@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
-// Raw-level scanner adapted from an earlier left-hand peripheral prototype
-// (2026-10-27): 5 ms slots, 100 us settle,
+// Raw-level scanner adapted from Downloads/LeftHand_LATEST/工程/rtl/
+// left_hand_peripheral_test.v (2026-10-27): 5 ms slots, 100 us settle,
 // carrier HALF=544. ADC128S102 pin timing follows TI SNAS298G and the
 // project's tested mode-3 scanner. This module does not demodulate I/Q.
 module left_hand_sensor_adapter #(

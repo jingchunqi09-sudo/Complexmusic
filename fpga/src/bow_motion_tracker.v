@@ -38,7 +38,6 @@
 //-----------------------------------------------------------------------------
 `timescale 1ns / 1ps
 `default_nettype none
-`include "latency_profile.vh"
 
 // R61（延迟优先档）：本模块只改一个参数 —— ATTACK_N 3 -> 2。
 // 其余全部靠"时基变快"自动缩短，因为 WIN / OPEN_CONFIRM / RELEASE_SAMPLES
@@ -88,7 +87,7 @@ module bow_motion_tracker #(
     //      只有连续两个样本（≈0.40 ms）都超过起音阈值才开弓。
     //      代价写在 src/latency_profile.vh 第二节（声音层）。
     parameter integer ATTACK_D=5,
-    parameter integer ATTACK_N=`R61_BOW_ATTACK_N,
+    parameter integer ATTACK_N=3,
     // 换弓迟滞，count（2 mm @ CPI=3200 -> 252）
     parameter integer TURN_H=252,
     // ---- R24 新增 ----

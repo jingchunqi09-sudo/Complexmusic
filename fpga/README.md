@@ -1,6 +1,6 @@
-# FPGA 源码
+# FPGA 源码（R54）
 
-**本目录的 RTL 是 R62b，不是 R54。** 这是本仓库最重要的一条说明。
+**本目录的 RTL 是 R54**，与 [`../releases/R54/R54-bitstream.fs`](../releases/R54/R54-bitstream.fs) 同版本。
 
 ---
 
@@ -9,44 +9,58 @@
 | 项 | 版本 | 位置 |
 |---|---|---|
 | 发布位流 | **R54** | [`../releases/R54/R54-bitstream.fs`](../releases/R54/R54-bitstream.fs) |
-| 本目录 RTL | **R62b** | `src/`（93 文件） |
-| 固件源码 | **3.5.13** | [`../firmware/src/`](../firmware/src/) |
-
-**本目录源码不能编译出 R54 位流。**
+| 本目录 RTL | **R54** | `src/`（91 文件 + `src/rom/` 9 个 `.hex`） |
+| 配套固件 | **3.5.8**（亦可用 3.5.10） | [`../releases/R54/`](../releases/R54/) |
 
 ---
 
-## 二、为什么没有 R54 源码
+## 二、这份 R54 源码的来源（必读）
 
-本项目长期采用「单份 `src/` 持续演进 + 发布目录只存位流/固件」的管理方式，
-且**没有版本控制**。R54 发布后，同一天内又迭代了 R55→R62b，`src/` 被持续覆盖，
-R54 时刻的 RTL 没有独立快照。
+本项目长期采用「单份 `src/` 持续演进 + 发布目录只存位流/固件」的管理方式，且早期
+**没有版本控制**。R54 之后同一天内又迭代了 R55→R62b，`src/` 被持续覆盖，
+R54 时刻的 RTL **没有整目录快照**。
 
-核查依据：
+因此本目录的 R54 源码是**按版本记录逐文件还原**得到的，不是原始目录的拷贝。
+还原过程与依据如下，每一步都可复核：
 
-1. `src/` 含 `harmonic_osc_bank.v`（18,616 B）——该文件由 R62 引入，R54 没有；
-2. R54 的发布目录里只有 `README.md`、4 个 `firmware_*.bin` 与 `.fs`，无源码；
-3. 构建临时目录（`build/_syntax_r54/`、`build/_sim_r54/`）里只有 ROM `.hex` 副本与
-   ModelSim 库，没有 RTL。
+| # | 文件 | 还原方式 | 依据 |
+|---|---|---|---|
+| 1 | `r9_audio_monitor.v`、`hdmi_instrument_display.v` | 取自 R55 源码快照 | 这两个文件的 SHA256 与 R62b **完全相同**，证明 R55 之后从未改动，故 R55 版即 R54 版 |
+| 2 | `tang_mega_60k_top.v`、`link_pkg.vh`、`link_regs.v`、`physical_performer_frontend.v`、`piezo_string_vote.v`、`tang_link_top.v` | 取自 R53 备份 | R54 文档明确「没有动 `tang_mega_60k_top.v`」；其余 5 个文件 R54 也未触及 |
+| 3 | `r9_stage_dashboard.v` | R55 快照 + 从 R36（R33 系列）恢复小提琴品格框分支 | R55 注释原文：「原来的 `g_yc`（174+lane*40）已删除 —— 小提琴不再画框」；R54 文档写明 lane 0..3 规则为「黄=未按到，绿=按对」，与 R36 实现一致 |
+| 4 | `paw3395_driver.v` | 取自 R47 | R48~R58 的实现文档均未提及该文件；R59 才修 MOT=0 缺陷 |
+| 5 | `bow_motion_tracker.v`、`ad7091r4_sensor_adapter.v`、`piezo_string_det.v` | 按 R61 文档记录的原值回退 | R61 文档逐项写明「新值 ← 原值」，见 `latency_profile.vh` 注释 |
+| 6 | `instrument_bank_core.v` | 摘除 R62 的振荡器接线 | R62b 文档：该文件的 R62 改动只是接线 |
+| 7 | `harmonic_osc_bank.v`、`latency_profile.vh` | **删除** | 前者 R62 新增、后者 R61 新增，R54 不存在 |
+| 8 | `left_hand_vote_config.vh` | 时基回到 1.25 ms × 4 组 | R61 文档：「R60: 4×1.25 ms = 5.00 ms 一轮；R61: 4×0.32 ms = 1.28 ms」 |
 
-这是事实陈述，不是推测。本仓库选择如实标注，而不是把 R62b 冒充成 R54。
+R61 回退的具体数值（均可在代码注释中对照）：
 
----
-
-## 三、R54 → R62b 改了什么
-
-| 版本 | 主题 | 涉及文件 |
+| 参数 | R61（已撤销） | **R54（本目录）** |
 |---|---|---|
-| R55 / R56 | 尤克里里指引反复调整 | `r9_stage_dashboard.v`、`r9_audio_monitor.v`、`hdmi_instrument_display.v` |
-| R57 | 以 R54 为基线做 uke 双手指引 | 同上 + 左手总线读取（**实板更差，已废弃**） |
-| R58 | 指引零负载 | 同上（仍自鸣，废弃） |
-| **R59** | **修单弦持续自鸣** | **`paw3395_driver.v`** —— MOT=0 时清零 delta |
-| R60 | ESP32 触发式曲谱指引 | `link_regs.v`、`cmd_dispatch.v`、`score_player.v`、`score_store.v`、`tang_mega_60k_top.v` |
-| R61 | 延迟优先 | **新增 `latency_profile.vh`**、`paw3395_driver.v`、`bow_motion_tracker.v`、`ad7091r4_sensor_adapter.v`、`piezo_string_det.v`、`physical_performer_frontend.v` |
-| R62 | 吞吐量 32 单元 | **新增 `harmonic_osc_bank.v`**、`tang_mega_60k_top.v` |
-| R62b | 资源时序优化 | `harmonic_osc_bank.v` 等：相位 32→24 位、乘法 32×32→16×17 |
+| 左手槽长 / 分组 | 0.32 ms / 2 组 | **1.25 ms / 4 组** |
+| 弓起音确认样本 | 2 | **3** |
+| AD7091R-4 SPI 半周期 | 8 clk（3.125 MHz） | **25 clk（1 MHz）** |
+| 压电单通道采样率 | 50 kSPS | **24.9 kSPS** |
+| 压电判决窗 / 死区 | 4 ms / 16 ms | **8 ms / 60 ms** |
+| 全局硬/软消抖 | 8 ms / 16 ms | **24 ms / 60 ms** |
+| 上电消隐 | 120 ms | **250 ms** |
+| 增长比回看窗 LAG | 150 | **148** |
 
-改动要点见 [`../CHANGELOG.md`](../CHANGELOG.md) 与 [`../docs/version-history.md`](../docs/version-history.md)。
+---
+
+## 三、已验证到什么程度
+
+| 检查 | 方法 | 结果 |
+|---|---|---|
+| 语法与端口连接 | ModelSim `vlog` 编译全部 91 个文件 | **0 error** |
+| 尤克里里指引 | R54 自带 `sim/tb_r54_uke_guide.v` | **6/6 `ok`**（行线、空弦块、命中变绿、清除） |
+| 小提琴指引 | 同一 tb 的对照项 | 框恢复为 R54 行为（`28e070` 绿），tb 因已被 R58 改成「期望无框」而判 FAIL —— **恰说明行为回到了 R54** |
+| 工程完整性 | 解析 `.gprj` 逐个校验路径 | **71/71 引用全部存在** |
+
+**未验证**：综合后的资源数与布局（本机内存不足以重跑 PnR）。R54 的记录基线为
+CLS **25,104**、BSRAM **104**、hold **+0.168 ns**、setup **+2.316 ns**、Fmax **56.577 MHz**。
+若你重新综合，资源数应落在同一量级；**逐位相同不保证**——等价写法在不同综合版本下的映射可能不同。
 
 ---
 
@@ -54,8 +68,8 @@ R54 时刻的 RTL 没有独立快照。
 
 | 路径 | 内容 |
 |---|---|
-| `src/` | 93 个 RTL 文件 + `src/rom/` 下 9 个 `.hex` ROM |
-| `constraints/tang_mega_60k.cst` | 引脚约束（**唯一权威**） |
+| `src/` | 91 个 RTL 文件 + `src/rom/` 下 9 个 `.hex` ROM |
+| `constraints/tang_mega_60k.cst` | 引脚约束（**唯一权威**，见 [`../hardware/pinout.md`](../hardware/pinout.md)） |
 | `constraints/tang_mega_60k.sdc` | 时序约束 |
 | `config/left_hand_detection.json` | 左手检测参数真源，生成 `src/left_hand_vote_config.vh` |
 | `tang_mega_60k.gprj` | Gowin 工程（相对路径引用上述目录，可直接打开） |
@@ -91,41 +105,25 @@ python ../tools/build/generate_left_hand_config.py
 
 ---
 
-## 六、验证判据
+## 六、R54 指标基线
 
-R62b 的实测指标（可作为"当前源码确实是最新"的校验基线）：
-
-| 指标 | R62b 实测 | 阈值 |
+| 指标 | R54 实测（place 1） | 阈值 |
 |---|---|---|
-| CLS | 25,585 / 29,952（86%） | **< 88%（≈26,358）** |
-| BSRAM | 105 / 118 | **余量 ≥ 10 块** |
-| hold | 0.183 ns | **< 0.10 ns 禁止上板；目标 ≥ 0.15** |
-| setup | 1.866 ns | ≥ 1.0（像素域） |
-| 系统 fmax | 58.514 MHz | — |
-| 像素 fmax | 84.960 MHz | — |
-| Latch | 0 | 必须为 0 |
+| CLS | 25,104 / 29,952（84%） | **< 88%（≈26,358）** |
+| BSRAM | 104 / 118（余 14） | **余量 ≥ 10 块** |
+| DSP | 77.5 / 118 | — |
+| hold | +0.168 ns | **< 0.10 ns 禁止上板；目标 ≥ 0.15** |
+| setup | +2.316 ns | ≥ 1.0（像素域） |
+| Fmax | 56.577 MHz | — |
+| Logic Register as Latch | **0** | 必须为 0 |
 
 > **hold 不能只看"最差值"这一个数字**：同一设计在不同布局下，最差路径可能落在完全
-> 不同的位置（R54 的 place1 最差在 `u_onset`，非音频链）。要比较的是**同一条路径**在
-> 各布局下的余量。选弦链是这个设计的固有临界路径。
+> 不同的位置。R54 的三种 place 实测为 0.168 / 0.128 / 0.052，方向随机。
+> 要比较的是**同一条路径**在各布局下的余量。选弦链是这个设计的固有临界路径。
 
 ---
 
-## 七、若要重建 R54 源码
-
-需**逆序**撤销 R55→R62b 共 9 个版本、约 10 个文件。注意：
-
-1. R57/R58 的改动本身是错的（实板更差），撤销它们是"去掉缺陷"而非"回退功能"；
-2. R62 是结构性新增（24 路振荡器），撤销等于删除 `harmonic_osc_bank.v` 及顶层例化；
-3. R61 的 `latency_profile.vh` 是新增 include，撤销后 `physical_performer_frontend.v`
-   的 include 也要一并回退，否则编译失败；
-4. 撤销后**必须重跑 PnR 并与 R54 记录的资源数比对**才算还原成功。
-
-工作量：熟悉代码者 1~2 小时；**不保证逐字节等价**（综合器对等价写法的资源映射可能不同）。
-
----
-
-## 八、三条不可违反的实现约束
+## 七、三条不可违反的实现约束
 
 这些是用三次同型事故换来的（R38 / R44 / R57），改代码前必读：
 

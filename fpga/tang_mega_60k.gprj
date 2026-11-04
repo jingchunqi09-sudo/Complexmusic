@@ -39,7 +39,6 @@
     <File path="src/latency_probe.v" type="file.verilog" enable="1" />
     <File path="src/violin_expression_bank.v" type="file.verilog" enable="1" />
     <File path="src/instrument_bank_core.v" type="file.verilog" enable="1" />
-    <File path="src/harmonic_osc_bank.v" type="file.verilog" enable="1" />
     <File path="src/small_room_reverb.v" type="file.verilog" enable="1" />
     <File path="src/tang_mega_60k_top.v" type="file.verilog" enable="1" />
     <File path="constraints/tang_mega_60k.cst" type="file.cst" enable="1" />

@@ -68,6 +68,8 @@ module piezo_string_vote #(
     input  wire        reset,
     input  wire [63:0] ay,          // 四路慢包络，[15:0]=弦0，逐 16 位递增
     input  wire        bow_start,   // 弓门控上升沿
+    input  wire [15:0] thr,         // R52：可配门限（0 = 用 SELECT_MIN）
+    input  wire        freeze,      // R52：琴体事件期间冻结投票（不投票、不衰减）
     output wire [3:0]  pick,        // 投票锁定的空弦，one-hot 或 0
     output wire [3:0]  pick_eff,    // pick -> 当前 argmax -> FALLBACK_MASK
     output wire        enabled      // 诊断：本窗包络是否过绝对门限
@@ -85,8 +87,9 @@ module piezo_string_vote #(
 
     // 绝对门限：静默时四路都在噪声底（实测 0.7~1.2 码），
     // 不过门限就不投票，否则 argmax 是纯噪声。
-    // R53：R52 曾把它改成 `thr` 可配（多一级 16 位 mux 在使能路径上），已删除。
-    wire enabled_w = (ay_max >= SELECT_MIN);
+    // R52：门限可由寄存器调（0 表示沿用编译期参数，保证默认行为与 R51 一致）。
+    wire [15:0] thr_eff = (thr == 16'd0) ? SELECT_MIN : thr;
+    wire enabled_w = (ay_max >= thr_eff);
 
     // ---------------- 4 个 3 位漏桶 ----------------
     reg [2:0] vote0, vote1, vote2, vote3;

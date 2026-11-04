@@ -32,10 +32,6 @@ input i_emergency, input i_fx_bypass, input [7:0] i_wet,
 input [7:0] i_damping, input [1:0] i_tail,
 // 总音色（timbre_shaper）：0..4095，2048 = 0 dB；i_tone_enable=0 时平滑回直通
 input [11:0] i_tone_bright, input [11:0] i_tone_warm, input i_tone_enable,
-// R62：加法合成振荡器组的测试模式开关（8 路固定音，供赛题"现场验证"看谱峰）。
-// 取 audio_core 内部 r_note / r_gate / w_envelope，**不从顶层 note_bus / gate_bus 取**，
-// 不给外部关键信号增加消费者（R44 / R57 的教训）。
-input i_osc_test,
 output [15:0] o_tone_clip,
 output reg signed [15:0] o_audio_sample,
 output reg o_audio_sample_valid, output reg o_audio_first_sample,
@@ -196,28 +192,6 @@ small_room_reverb #(.SAMPLE_RATE_MILLIHZ(SAMPLE_RATE_MILLIHZ)) u_room (
 // 767 触发 frame_timeout（此时 !w_fx_valid 成立），既丢样本又多出一个静音帧。
 wire signed [15:0] w_tone_sample;
 wire               w_tone_valid;
-//-----------------------------------------------------------------------------
-// R62：加法合成振荡器组 —— 8 个独立振荡单元（相位累加器 + 频率调控 + 包络）。
-//
-// 位置说明：输出直接叠加到 r_mix（琴体谐振之后、软限幅之前），
-//   **不接在 r_drive 上**，避免改变琴体谐振器的输入阻抗特性 —— 那会让
-//   现有音色随泛音层一起变，属于破坏性改动。
-//
-// 幅度：演奏时 AMP_SHIFT=5（-30 dB，只听出一点空气感，音色基本不变）；
-//       测试模式下 AMP_SHIFT 降到 3（-18 dB），8 路清晰可辨以便频谱验证。
-//       两条幅度都是**运行时参与运算**的真信号，不是条件恒假被优化掉的空壳
-//       （R57 的教训：平时不显示的逻辑，综合器照样布 LUT）。
-//-----------------------------------------------------------------------------
-wire [127:0] w_env_bus = {w_envelope[7],w_envelope[6],w_envelope[5],w_envelope[4],
-                          w_envelope[3],w_envelope[2],w_envelope[1],w_envelope[0]};
-wire signed [19:0] w_osc_sum;
-wire               w_osc_valid;
-harmonic_osc_bank u_harm(
-    .clk(i_clk),.reset(i_reset || i_emergency),.sample_tick(i_sample_tick),
-    .i_note(r_note),.i_gate(r_gate),.i_env(w_env_bus),
-    .i_test_mode(i_osc_test),
-    .o_sum(w_osc_sum),.o_valid(w_osc_valid)
-);
 timbre_shaper #(.PARAM_WIDTH(12)) u_tone (
 .i_clk(i_clk),
 .i_reset(i_reset || i_emergency),
@@ -361,7 +335,7 @@ begin
                 r_drive[0]<=$signed(r_pairs[0])+$signed(r_pairs[1]);
                 r_drive[1]<=$signed(r_pairs[2])+$signed(r_pairs[3]);
             end
-            if(w_body_valid) r_mix<=$signed(w_body[0])+$signed(w_body[1])+w_osc_sum[18:0];
+            if(w_body_valid) r_mix<=$signed(w_body[0])+$signed(w_body[1]);
             if(r_body_valid_d1)
             begin
                 // R13b 软限幅：|x|<=24576 完全直通（单/双声部无损），超过后斜率 1/32，

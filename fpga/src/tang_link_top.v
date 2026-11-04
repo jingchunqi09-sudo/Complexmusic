@@ -43,6 +43,12 @@ module tang_link_top #(
     output wire [11:0] o_tone_warm,
     output wire [11:0] o_tone_bright,
     output wire        o_tone_enable,
+    // R52：选弦控制（REG_SEL_*），默认全中性
+    output wire        o_sel_manual,
+    output wire        o_sel_freeze,
+    output wire [2:0]  o_sel_force,
+    output wire [7:0]  o_sel_thr,
+    input  wire [7:0]  i_sel_stat,
     input  wire [15:0] i_tone_clip,   // 音色模块软限幅计数（只读回传）
     // 曲谱事件（可选接入 lane_arbiter）
     output wire        o_ev_valid,
@@ -70,14 +76,7 @@ module tang_link_top #(
     output wire [7:0]  o_stat_err,
     output wire [7:0]  o_stat_ok,
     output wire [7:0]  o_stat_bad,
-    output wire [7:0]  o_rec_drop,
-    // R60：演奏指引直控（**纯显示侧**）+ 起音回传。
-    // 这 5 根只连到 link_regs 的 0x30..0x34，不进 cmd_dispatch、不进音频核。
-    input  wire [7:0]  i_pluck_cnt,      // 只读 0x33
-    input  wire [7:0]  i_pluck_mask,     // 只读 0x34
-    output wire [7:0]  o_guide_ctrl,     // 0x30
-    output wire [7:0]  o_guide_lane,     // 0x31
-    output wire [7:0]  o_guide_note      // 0x32
+    output wire [7:0]  o_rec_drop
 );
     `include "link_pkg.vh"
 
@@ -158,6 +157,10 @@ module tang_link_top #(
     wire [7:0]  r_score_ctrl, r_link_ctrl;
     wire [11:0] r_tone_warm, r_tone_bright;
     wire        r_tone_enable;
+    // R52：选弦控制内部线
+    wire        r_sel_manual, r_sel_freeze;
+    wire [2:0]  r_sel_force;
+    wire [7:0]  r_sel_thr;
     wire [7:0]  sc_state;
     wire [15:0] sc_pos;
 
@@ -179,10 +182,9 @@ module tang_link_top #(
         .o_baud_fast(baud_fast),
         .o_tone_warm(r_tone_warm), .o_tone_bright(r_tone_bright),
         .o_tone_enable(r_tone_enable),
-        // R60：指引直控 + 起音回传（0x30..0x34）
-        .i_pluck_cnt(i_pluck_cnt), .i_pluck_mask(i_pluck_mask),
-        .o_guide_ctrl(o_guide_ctrl), .o_guide_lane(o_guide_lane),
-        .o_guide_note(o_guide_note)
+        .o_sel_manual(r_sel_manual), .o_sel_freeze(r_sel_freeze),
+        .o_sel_force(r_sel_force), .o_sel_thr(r_sel_thr),
+        .i_sel_stat(i_sel_stat)
     );
 
     assign o_bow_deadband = o_bow_deadband_inner;
@@ -304,5 +306,10 @@ module tang_link_top #(
     assign o_tone_warm    = r_tone_warm;
     assign o_tone_bright  = r_tone_bright;
     assign o_tone_enable  = r_tone_enable;
+    // R52：选弦控制
+    assign o_sel_manual = r_sel_manual;
+    assign o_sel_freeze = r_sel_freeze;
+    assign o_sel_force  = r_sel_force;
+    assign o_sel_thr    = r_sel_thr;
 
 endmodule
