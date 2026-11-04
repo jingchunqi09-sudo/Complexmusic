@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project[]>
+<Project>
+  <Template>FPGA</Template>
+  <Version>5</Version>
+  <Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
+  <FileList>
+    <File path="src/video_timing_720p.v" type="file.verilog" enable="1" />
+    <File path="src/display_observer_cdc.v" type="file.verilog" enable="1" />
+    <File path="src/instrument_dashboard.v" type="file.verilog" enable="0" />
+    <File path="src/r9_stage_dashboard.v" type="file.verilog" enable="1" />
+    <File path="src/disp_v3_stage.v" type="file.verilog" enable="0" />
+    <File path="src/disp_v3_panels.v" type="file.verilog" enable="0" />
+    <File path="src/disp_v3_text.v" type="file.verilog" enable="0" />
+    <File path="src/disp_v3_anim.v" type="file.verilog" enable="0" />
+    <File path="src/stage_mode_button.v" type="file.verilog" enable="1" />
+    <File path="src/r9_text_layer.v" type="file.verilog" enable="1" />
+    <File path="src/r9_audio_monitor.v" type="file.verilog" enable="1" />
+    <File path="src/r9_octave_analyzer.v" type="file.verilog" enable="1" />
+    <File path="src/audio_scope_capture.v" type="file.verilog" enable="1" />
+    <File path="src/hdmi_instrument_display.v" type="file.verilog" enable="1" />
+    <File path="src/video_vendor/TMDS_PLL.v" type="file.verilog" enable="1" />
+    <File path="src/video_vendor/DVI_TX_Top.v" type="file.verilog" enable="1" />
+    <File path="src/instrument_body_resonator_tdm.v" type="file.verilog" enable="1" />
+    <File path="src/audio_scope_capture.v" type="file.verilog" enable="1" />
+    <File path="src/paw3395_driver.v" type="file.verilog" enable="1" />
+    <File path="src/left_hand_sensor_adapter.v" type="file.verilog" enable="1" />
+    <File path="src/left_hand_slot_evidence.v" type="file.verilog" enable="1" />
+    <File path="src/left_hand_string_decoder.v" type="file.verilog" enable="1" />
+    <File path="src/left_hand_press_detector.v" type="file.verilog" enable="0" />
+    <File path="src/ad7091r4_sensor_adapter.v" type="file.verilog" enable="1" />
+    <File path="src/physical_performer_frontend.v" type="file.verilog" enable="1" />
+    <File path="src/voice_envelope.v" type="file.verilog" enable="1" />
+    <File path="src/violin_waveguide_voice.v" type="file.verilog" enable="1" />
+    <File path="src/ukulele_waveguide_voice.v" type="file.verilog" enable="1" />
+    <File path="src/pt8211_tx.v" type="file.verilog" enable="1" />
+    <File path="src/pt8211_external_tx.v" type="file.verilog" enable="1" />
+    <File path="src/audio_smoke_driver.v" type="file.verilog" enable="1" />
+    <File path="src/latency_probe.v" type="file.verilog" enable="1" />
+    <File path="src/violin_expression_bank.v" type="file.verilog" enable="1" />
+    <File path="src/instrument_bank_core.v" type="file.verilog" enable="1" />
+    <File path="src/harmonic_osc_bank.v" type="file.verilog" enable="1" />
+    <File path="src/small_room_reverb.v" type="file.verilog" enable="1" />
+    <File path="src/tang_mega_60k_top.v" type="file.verilog" enable="1" />
+    <File path="constraints/tang_mega_60k.cst" type="file.cst" enable="1" />
+    <File path="src/bow_motion_tracker.v" type="file.verilog" enable="1" />
+    <File path="src/performer_pitch_map.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_onset_bank.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_transient_core.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_band_ch.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_string_det.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_string_vote.v" type="file.verilog" enable="1" />
+    <File path="src/ms_core_ch.v" type="file.verilog" enable="1" />
+    <File path="src/ms_string_top.v" type="file.verilog" enable="1" />
+    <File path="src/piezo_wave_bank.v" type="file.verilog" enable="1" />
+    <File path="src/stage_sensor_cdc.v" type="file.verilog" enable="1" />
+    <File path="src/stage_font.v" type="file.verilog" enable="1" />
+    <File path="src/stage_text.v" type="file.verilog" enable="1" />
+    <File path="src/stage_number.v" type="file.verilog" enable="1" />
+    <File path="src/stage_bcd.v" type="file.verilog" enable="1" />
+    <File path="src/stage_fretboard.v" type="file.verilog" enable="1" />
+    <File path="src/stage_violin.v" type="file.verilog" enable="1" />
+    <File path="src/audio_volume.v" type="file.verilog" enable="1" />
+    <File path="src/cmd_dispatch.v" type="file.verilog" enable="1" />
+    <File path="src/lane_arbiter.v" type="file.verilog" enable="1" />
+    <File path="src/link_crc.v" type="file.verilog" enable="1" />
+    <File path="src/link_frame_rx.v" type="file.verilog" enable="1" />
+    <File path="src/link_frame_tx.v" type="file.verilog" enable="1" />
+    <File path="src/link_regs.v" type="file.verilog" enable="1" />
+    <File path="src/rec_ladpcm.v" type="file.verilog" enable="1" />
+    <File path="src/rec_tap_u8.v" type="file.verilog" enable="1" />
+    <File path="src/rec_stream.v" type="file.verilog" enable="1" />
+    <File path="src/score_player.v" type="file.verilog" enable="1" />
+    <File path="src/score_store.v" type="file.verilog" enable="1" />
+    <File path="src/tang_link_top.v" type="file.verilog" enable="1" />
+    <File path="src/uart_rx.v" type="file.verilog" enable="1" />
+    <File path="src/uart_tx.v" type="file.verilog" enable="1" />
+    <File path="src/timbre_shaper.v" type="file.verilog" enable="1" />
+    <File path="constraints/tang_mega_60k.sdc" type="file.sdc" enable="1" />
+  </FileList>
+</Project>

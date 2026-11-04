@@ -1,0 +1,69 @@
+`timescale 1ns/1ps
+// Four independent fingerboards. Uke is chromatic 0..16 frets. Violin uses
+// three 5-key gesture groups and fret16 as the +36-semitone anchor.
+// Group changes preserve pitch class; changing speed never resets pitch.
+module performer_pitch_map_candidate #(
+    parameter integer CLOCK_HZ=50000000,
+    parameter integer FAST_MS=40,
+    parameter integer SLOW_MS=160
+)(
+    input wire clk,reset,
+    input wire [19:0] fret_bus,
+    input wire [3:0] valid_mask,
+    output wire [55:0] note_bus,
+    output wire [3:0] bowed_strings
+);
+    localparam integer TICK_CLKS=CLOCK_HZ/1000;
+    function integer width;
+        input integer n;
+        begin width=1;while(n>1)begin n=n>>1;width=width+1;end end
+    endfunction
+    reg [width(TICK_CLKS)-1:0] tick_count;
+    wire tick_ms=(tick_count==TICK_CLKS-1);
+    always @(posedge clk) begin
+        if(reset || tick_ms)tick_count<=0;else tick_count<=tick_count+1'b1;
+    end
+    genvar s;
+    generate for(s=0;s<4;s=s+1) begin: STRING
+        localparam [6:0] V_OPEN=(s==0)?55:(s==1)?62:(s==2)?69:76;
+        localparam [6:0] U_OPEN=(s==0)?67:(s==1)?60:(s==2)?64:69;
+        wire [4:0] fret=valid_mask[s] ? fret_bus[s*5 +:5] : 5'd0;
+        reg [4:0] previous_fret;
+        // Octave is decoded directly from the coherent current fret.  Holding
+        // an old group for one cycle can create a false note at 16->group0.
+        reg [2:0] gesture;
+        reg [3:0] pitch_class;
+        reg [width(SLOW_MS)-1:0] dwell_ms;
+        wire [4:0] key=(fret==0)?5'd0:fret-1'b1;
+        // Explicit range decode avoids variable divide/modulo hardware.
+        wire [1:0] next_group=(fret<=5)?0:(fret<=10)?1:2;
+        // Keep the subtractors in the five-bit fret domain.  Unsized integer
+        // literals made Gowin infer a 32-bit expression and then truncate it;
+        // the explicit constants preserve the same values without a width
+        // warning or an unnecessarily wide compare/subtract cone.
+        wire [4:0] group_key=(fret<=5)?key:(fret<=10)?key-5'd5:key-5'd10;
+        wire fast=(gesture==0 || gesture==4);
+        wire move_left=(gesture==0 || gesture==1);
+        wire moving=(gesture!=2 && fret!=0 && fret!=16);
+        wire [5:0] offset=(fret==16)?6'd36:
+            (fret==0)?6'd0:((next_group==0)?6'd0:(next_group==1)?6'd12:6'd24)+pitch_class;
+        assign note_bus[s*7 +:7]=V_OPEN+offset;
+        assign note_bus[(s+4)*7 +:7]=U_OPEN+fret;
+        assign bowed_strings[s]=(fret!=0);
+        always @(posedge clk) begin
+            if(reset)begin previous_fret<=0;gesture<=2;pitch_class<=0;dwell_ms<=0;end
+            else if(fret!=previous_fret)begin
+                previous_fret<=fret;dwell_ms<=0;
+                if(fret!=0 && fret!=16)begin gesture<=group_key[2:0];end
+                else gesture<=2;
+            end else if(tick_ms)begin
+                if(!moving) dwell_ms<=0;
+                else if(dwell_ms>=(fast?FAST_MS:SLOW_MS)-1)begin
+                    dwell_ms<=0;
+                    if(move_left && pitch_class!=0)pitch_class<=pitch_class-1'b1;
+                    else if(!move_left && pitch_class!=11)pitch_class<=pitch_class+1'b1;
+                end else dwell_ms<=dwell_ms+1'b1;
+            end
+        end
+    end endgenerate
+endmodule

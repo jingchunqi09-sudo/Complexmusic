@@ -1,0 +1,24 @@
+# vsim -c -lib build/revision6_router_work revision6_router_tb -l sim/results/revision6_router/simulation.log -do "run -all; quit -f" 
+# Start time: 17:45:06 on Oct 15,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# //  ModelSim SE-64 10.6d Feb 24 2018
+# //
+# //  Copyright 1991-2018 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  ModelSim SE-64 and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading work.revision6_router_tb(fast)
+# run -all
+# MEASURE rejected=3 stale=7 crc=0 superseded=3 scan_anomalies=5 emergency_events=2 serial_events=4 A5_events=2
+# PASS revision6_router_tb: CRC, sequences, epoch, bank isolation/takeover, pressure, bounded A5/A6 triggers, contact, U release, timeout, atomic48 scan, fresh global emergency and delayed CLAIM, real UART A5/A6
+# ** Note: $finish    : sim/revision6_router_tb.v(286)
+#    Time: 5768520 ns  Iteration: 1  Instance: /revision6_router_tb
+# End time: 17:45:18 on Oct 15,2026, Elapsed time: 0:00:12
+# Errors: 0, Warnings: 0

@@ -1,0 +1,102 @@
+// Tang Mega 60K core: GW5AT-60B, PBGA484A, GW5AT-LV60PG484AC1/I0.
+// Verified from 30354 core pages 1/2/5/6 + 31005 Dock pages 7/9/10/19.
+// Connector positions, not the 138K FPGA bank names, translate across BTB.
+// Default Dock VCCIO1/2 is 3.3 V; do not use with a 1.8 V resistor modification.
+
+// Core 50 MHz crystal; no UART test/control ports in this physical build.
+IO_LOC "clk_50m" V22;
+IO_PORT "clk_50m" IO_TYPE=LVCMOS33 PULL_MODE=NONE BANK_VCCIO=3.3;
+IO_LOC "audio_bck_in" V13;
+IO_PORT "audio_bck_in" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
+
+// Dock user button 0 -> core Bank9 AA13 (1.5 V).
+IO_LOC "reset_n" AA13;
+IO_PORT "reset_n" IO_TYPE=LVCMOS15 PULL_MODE=UP BANK_VCCIO=1.5;
+
+// Dock user button 1 -> core Bank9 AB13 (1.5 V). R11.2: display page cycle.
+IO_LOC "mode_n" AB13;
+IO_PORT "mode_n" IO_TYPE=LVCMOS15 PULL_MODE=UP BANK_VCCIO=1.5;
+
+// PT8211 U16.
+IO_LOC "hp_bck" Y17;
+IO_PORT "hp_bck" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "hp_ws" AB17;
+IO_PORT "hp_ws" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "hp_din" AA16;
+IO_PORT "hp_din" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=8 BANK_VCCIO=3.3;
+IO_LOC "pa_en" AB16;
+IO_PORT "pa_en" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=8 BANK_VCCIO=3.3;
+
+// CN2 PAW3395.  The module's MOTION and NRESET pins are not on CN2.
+IO_LOC "paw_ncs" D19;
+IO_LOC "paw_miso" E19;
+IO_LOC "paw_mosi" C19;
+IO_LOC "paw_sclk" C18;
+IO_PORT "paw_ncs" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "paw_miso" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
+IO_PORT "paw_mosi" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "paw_sclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+
+// H4 left-hand 16-channel ADC128S102/electrode adapter.
+IO_LOC "left_adc_sclk" D15;
+IO_LOC "left_adc1_out" A18;
+IO_LOC "left_adc1_cs_n" A19;
+IO_LOC "left_adc2_out" D17;
+IO_LOC "left_adc_din" C17;
+IO_LOC "left_adc2_cs_n" B17;
+IO_LOC "left_tx3" B18;
+IO_LOC "left_tx4" B21;
+IO_LOC "left_tx1" A21;
+IO_LOC "left_tx2" B20;
+IO_LOC "left_sk_data" A20;
+IO_LOC "left_sk_clk" A15;
+IO_PORT "left_adc_sclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_adc_din" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_adc1_cs_n" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_adc2_cs_n" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_adc1_out" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
+IO_PORT "left_adc2_out" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
+IO_PORT "left_tx1" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_tx2" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_tx3" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_tx4" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_sk_data" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "left_sk_clk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+
+// H6 right-hand AD7091R-4.  H6.1/H6.2/H6.10 are grounds; the 5 V feed is H5.
+IO_LOC "piezo_cs_n" B13;
+IO_LOC "piezo_sclk" C13;
+IO_LOC "piezo_mosi" A14;
+IO_LOC "piezo_miso" A13;
+IO_LOC "piezo_convst_n" B16;
+IO_LOC "piezo_reset_n" B15;
+IO_LOC "piezo_busy_n" A16;
+IO_PORT "piezo_cs_n" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "piezo_sclk" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "piezo_mosi" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "piezo_miso" IO_TYPE=LVCMOS33 PULL_MODE=DOWN BANK_VCCIO=3.3;
+IO_PORT "piezo_convst_n" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "piezo_reset_n" IO_TYPE=LVCMOS33 PULL_MODE=UP DRIVE=4 BANK_VCCIO=3.3;
+IO_PORT "piezo_busy_n" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+
+// E14/E13 are ESP_TX/ESP_RX through R6/R5 on the user's mainboard.
+// R19：LINK v2 链路。波特率 230400 8N1（DIV_DEFAULT=217 @50 MHz），两根都要上拉，
+// ESP32 侧 TX 在复位期间可能悬空，PULL_MODE=UP 避免起始位误判。
+IO_LOC "uart_tx_o" E13;
+IO_PORT "uart_tx_o" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+IO_LOC "uart_rx_i" E14;
+IO_PORT "uart_rx_i" IO_TYPE=LVCMOS33 PULL_MODE=UP BANK_VCCIO=3.3;
+// Do not drive measurement pulses onto those nets. Latency remains internal.
+// NEO Dock J29 direct DVI/TMDS; matched to official 60K cam_dvi.
+IO_LOC "hdmi_data_p[0]" J14,H14;
+IO_LOC "hdmi_data_p[1]" J15,H15;
+IO_LOC "hdmi_data_p[2]" K17,J17;
+IO_LOC "hdmi_clock_p" G15,G16;
+IO_PORT "hdmi_data_p[0]" PULL_MODE=NONE DRIVE=3.5 BANK_VCCIO=3.3;
+IO_PORT "hdmi_data_p[1]" PULL_MODE=NONE DRIVE=3.5 BANK_VCCIO=3.3;
+IO_PORT "hdmi_data_p[2]" PULL_MODE=NONE DRIVE=3.5 BANK_VCCIO=3.3;
+IO_PORT "hdmi_clock_p" PULL_MODE=NONE DRIVE=3.5 BANK_VCCIO=3.3;
+IO_LOC "hdmi_tx_enable" K14;
+IO_PORT "hdmi_tx_enable" IO_TYPE=LVCMOS33 PULL_MODE=NONE DRIVE=4 BANK_VCCIO=3.3;
+INS_LOC "VIDEO.u_display/u_video_pll/PLLA_inst" PLL_R[0];
+

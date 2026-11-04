@@ -1,0 +1,50 @@
+# ---- Gowin EDA 中间产物 ----
+/impl/
+pft_*/
+*.gprj.user
+*.qdb
+*.qpg
+*.qtl
+*.vme
+*.bak
+/_syntax_*/
+/_sim_*/
+/_syn_*/
+
+# ---- PlatformIO ----
+.pio/
+.pioenvs/
+.piolibdeps/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+compile_commands.json
+build_log.txt
+
+# ---- ModelSim ----
+/work/
+transcript
+vsim.wlf
+*.vcd
+*.wlf
+
+# ---- 编辑器与系统 ----
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 临时文件 ----
+tmp_*
+*.tmp
+
+# ---- 说明 ----
+# 注意：上面用 /build/、/work/ 前缀（只匹配仓库根），
+# 否则会误伤 tools/build/ 与 tools/sim/ 下的同名目录。
+# releases/ 下的位流与固件是交付物，必须保留：
+!releases/**/*.fs
+!releases/**/*.bin

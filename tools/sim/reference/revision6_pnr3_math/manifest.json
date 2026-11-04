@@ -1,0 +1,19 @@
+{
+  "origin": "build/revision6_pnr_attempt3/src",
+  "archived_source_sha256": {
+    "instrument_bank_core.v": "b47086d0c9da870e7fbb9ee28d22160c14a7835dd118b7032201b86ca966939e",
+    "violin_expression.v": "df407aac95aa20b578a16c52658b759f0ed4a749bfa95fb77954de03f6111dae",
+    "violin_waveguide_voice.v": "54a8ae4772dc860da284afe7d6b9f42a9f58cc7b65d90054a2f77835947db2ab",
+    "ukulele_waveguide_voice.v": "cf38fd4b2e0e2736b5c631e1eba8a4ef739eddd5307e1440be26bd6f210f5e84",
+    "plucked_body_filter.v": "686dd131abe899baeab5abaca55005e8fbb1f94312e29949e7dcd66f7cf0942a",
+    "voice_envelope.v": "8baf22d3215d6ecb8fc1db675fcd0b576706b9a8d2757b8b20924e0770cf6008",
+    "instrument_body_resonator.v": "e141bf615204196aed8f7c224f78a1ebac4cb53b1debe20d50991026f5a1f0cf",
+    "small_room_reverb.v": "8ab6eac476e44f6dd3aab7444845185d8e24dc6a2a8f4b8a1a0880da960d02c5",
+    "instrument_pitch.vh": "cd1dd87c1bfd55d9b4f4a1d75baa70b6a65b482ae88124837a7bfa5754f5825d"
+  },
+  "copied_modules": [
+    "instrument_bank_core.v",
+    "violin_waveguide_voice.v"
+  ],
+  "status": "Historical math reference; original model20 insufficient settling; runner derives phase28/50 gold"
+}

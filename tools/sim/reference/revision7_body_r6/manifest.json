@@ -1,0 +1,9 @@
+{
+  "status": "Pinned R6 body mathematical reference; not the R7 tone profile",
+  "source_origin": "build/revision7_baseline_20261005/src/instrument_body_resonator.v",
+  "source_sha256": {
+    "instrument_body_resonator.v": "e141bf615204196aed8f7c224f78a1ebac4cb53b1debe20d50991026f5a1f0cf"
+  },
+  "identical_to_pnr3_body_sha256": "e141bf615204196aed8f7c224f78a1ebac4cb53b1debe20d50991026f5a1f0cf",
+  "transformation": "Original source bytes unmodified; private gold snapshots may rename only module instrument_body_resonator to instrument_body_resonator_r6."
+}

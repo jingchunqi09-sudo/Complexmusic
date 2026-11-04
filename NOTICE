@@ -1,0 +1,68 @@
+# 第三方组件与声明
+
+本仓库包含或依赖以下第三方内容。它们**不在**本项目 `LICENSE` 覆盖范围内，
+各自遵循其原始许可。
+
+---
+
+## 1. Gowin EDA 参考设计（随源码分发）
+
+| 项 | 内容 |
+|---|---|
+| 文件 | `fpga/src/video_vendor/DVI_TX_Top.v`、`TMDS_PLL.v`、`DVI_TX_Top.ipc` |
+| 来源 | Gowin EDA V1.9.12.03 自带的 DVI/TMDS 参考设计 |
+| 许可 | 遵循你持有的 Gowin EDA 许可协议 |
+
+**注意**：再分发前请确认你的 Gowin EDA 许可允许该用法。
+若不允许，删除 `fpga/src/video_vendor/` 后，从自己的 Gowin EDA 安装目录复制同名文件即可，
+其余源码不受影响。
+
+---
+
+## 2. Arduino-ESP32 与 PlatformIO（构建依赖，未随仓库分发）
+
+`firmware/` 依赖：
+
+- **Arduino-ESP32** 核心库 — LGPL-2.1
+- **PlatformIO** — Apache-2.0
+- **esptool / pyserial** — GPL-2.0 / BSD
+
+这些依赖由 `platformio.ini` 在构建时自动拉取，本仓库不含其源码。
+
+---
+
+## 3. 芯片数据手册（未随仓库分发）
+
+本仓库**不包含**任何芯片厂商的数据手册、应用笔记或参考代码。
+
+涉及器件（请从各厂商官网获取资料）：
+
+| 器件 | 用途 |
+|---|---|
+| GW5AT-LV60PG484AC1/I0 | 主 FPGA（Gowin Tang Mega 60K） |
+| PAW3395 | 弓位/弓速光学传感器 |
+| AD7091R-4 | 4 路压电采集 ADC |
+| ADC128S102 | 左手 16 通道电极采集 ADC |
+| PT8211 | I2S 音频 DAC |
+| SK9822 | 左手灯带 |
+
+---
+
+## 4. 字体与图形 ROM
+
+`fpga/src/rom/*.hex` 内的位图字模、指板图与琴身掩码为本项目自建，
+随本仓库许可分发，不涉及第三方字体版权。
+
+---
+
+## 5. 未包含的第三方工程
+
+研发过程中参考过的开源工程（eurorack 系列模块、syfala 等）
+**未随本仓库分发**，仅作为设计参考，其许可与本项目无关。
+
+---
+
+## 6. 商标
+
+"Tang Mega"、"Gowin"、"ESP32"、"Arduino"、"PlatformIO" 等为其各自权利人的商标。
+本项目与上述厂商**无隶属或背书关系**。

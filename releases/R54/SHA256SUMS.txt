@@ -1,0 +1,16 @@
+# R54 发布物校验清单
+# 生成时间：2026-11-04
+# 校验命令（Windows）：certutil -hashfile <文件名> SHA256
+# 校验命令（Linux/macOS）：sha256sum -c SHA256.txt
+
+E99C65950C8BD723AB60F8D0457FBD6872367CD066CD1B8DFBD5552E8A67EDC1  烧录_R54_尤克里里指引_20261103.fs  20778247 B
+FBF9B098FD312AB7CED5847C88ECA871F942972B4F496A711AFD2E9C48F2B459  firmware_3.5.10.bin  864384 B
+EA188AC92D6EA744AD8373FE887CD76AEC8E2DBE8D4682DD98405B03A8413A3D  firmware_3.5.8.bin  862144 B
+795AA12CDF5CD1BB906E0663C782E6CFD4043AEEFDC6DEFF70C5A8F522771C88  firmware_3.5.13.bin  868528 B
+
+# 配对说明
+# 位流 R54 + 固件 3.5.10 = 推荐组合（引脚表正确，四旋钮位置正确）
+# 位流 R54 + 固件 3.5.8  = 原始组合，但 3.5.8 引脚表为反序版本，四旋钮会错位
+# 位流 R54 + 固件 3.5.13 = ESP32 侧可用，但 3.5.12 起状态帧字段由 800 增至 950 字节
+#                          （esp32_wifi_console/src/main.cpp:561），配 R54 位流可能显示不完整，
+#                          未实测；如需完整指引状态请配 R60 及以后位流。

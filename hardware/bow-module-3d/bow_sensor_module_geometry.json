@@ -1,0 +1,42 @@
+{
+  "status": "concept_only",
+  "units": "mm",
+  "coordinate_system": {
+    "origin": "clamp_center_bow_axis_pod_mount_datum",
+    "X": "along_bow_stick_toward_tip",
+    "Y": "from_bow_axis_toward_sensor_pod",
+    "Z": "upward_from_tracking_surface_toward_pod"
+  },
+  "parameters": {
+    "bow_stick_diameter_nominal": 10.0,
+    "clamp_bore_diameter": 10.6,
+    "clamp_length_x": 30.0,
+    "clamp_width_y": 18.0,
+    "clamp_height_z": 18.0,
+    "pod_size_xyz": [28.0, 18.0, 10.0],
+    "pcb_thickness": 1.6,
+    "optical_working_distance_range": [2.2, 2.6],
+    "optical_window_xy": [6.0, 4.0],
+    "reference_rail_xyz": [12.0, 3.0, 80.0]
+  },
+  "parts": [
+    {"id": "CLAMP_LOWER", "kind": "split_clamp", "x": 0, "y": 0, "z": 0},
+    {"id": "CLAMP_UPPER", "kind": "split_clamp", "x": 0, "y": 0, "z": 0},
+    {"id": "SENSOR_POD", "kind": "rounded_enclosure", "x": 0, "y": 15.0, "z": 12.0},
+    {"id": "PCB", "kind": "flat_board", "x": 0, "y": 15.0, "z": 12.0, "thickness": 1.6},
+    {"id": "LENS_HOLDER", "kind": "optical_carrier", "x": 0, "y": 15.0, "z": 7.0},
+    {"id": "REFERENCE_RAIL", "kind": "external_textured_surface", "x": 0, "y": 15.0, "z": -3.0}
+  ],
+  "interfaces": {
+    "bow_connector": ["5V_IN", "GND", "SCLK", "MOSI", "MISO", "NCS"],
+    "optical_window_normal": [0, 0, -1],
+    "cable_exit": "+X_rear",
+    "clamp_fasteners": "two_transverse_screws"
+  },
+  "verification": {
+    "measured_on_real_bow": false,
+    "lens_part_number_confirmed": false,
+    "pcb_fabrication_checked": false,
+    "optical_tracking_tested": false
+  }
+}

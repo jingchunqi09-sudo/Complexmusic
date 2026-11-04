@@ -1,0 +1,16 @@
+[
+  {
+    "source": "docs\\implementation\\physical_20261025\\api\\candidate_control_assertions_kimi_kimi\\review.md",
+    "block": 0,
+    "output": "sim\\physical_20261025\\model_candidates\\candidate_control_assertions_kimi_kimi_0.v.txt",
+    "sha256": "22a055450c191bd78bea22267c6157f0896c7933397bb1129c4dc28f95ac6d0b",
+    "status": "raw candidate, not compiled as delivered"
+  },
+  {
+    "source": "docs\\implementation\\physical_20261025\\api\\candidate_frontend_tb_qianwen_qianwen\\review.md",
+    "block": 0,
+    "output": "sim\\physical_20261025\\model_candidates\\candidate_frontend_tb_qianwen_qianwen_0.v.txt",
+    "sha256": "48237dcbaf417bc4ab3237cf10b41147798ba37a9514cbb4418b5e2a35b55bc4",
+    "status": "raw candidate, not compiled as delivered"
+  }
+]

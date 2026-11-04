@@ -1,0 +1,10 @@
+{
+  "status": "Pinned original PNR4 expression mathematical reference; not a timing PASS or release",
+  "source_origin": "build/revision6_pnr_attempt4/src/violin_expression.v",
+  "source_sha256": {
+    "violin_expression.v": "df407aac95aa20b578a16c52658b759f0ed4a749bfa95fb77954de03f6111dae"
+  },
+  "shared_pitch_sha256": "cd1dd87c1bfd55d9b4f4a1d75baa70b6a65b482ae88124837a7bfa5754f5825d",
+  "identical_to_pnr3_shared_expression_sha256": "df407aac95aa20b578a16c52658b759f0ed4a749bfa95fb77954de03f6111dae",
+  "transformation": "Original source bytes unmodified; runners may rename only module violin_expression to violin_expression_pnr4 in a private generated snapshot."
+}

@@ -1,0 +1,7 @@
+{
+  "violin_waveguide_voice.v": "cbb9bab1cddee9abd8b7eef4fb8f594cd14e365bd2669fc2acef91a1592dc37d",
+  "ukulele_waveguide_voice.v": "990903edf7fec007c0ba3d6f362c325b66e5089a440ec78c8e9ab0be04e5c4be",
+  "instrument_bank_core.v": "a383849f8a9e4937ecd7597ced2afae791fc73d4c557d9343876b9b097aeef7d",
+  "instrument_body_resonator.v": "7deb26eaee1dca7ee52c49c28aab43d13a85ba07b21bba466436e49bf3caf2d4",
+  "plucked_body_filter.v": "686dd131abe899baeab5abaca55005e8fbb1f94312e29949e7dcd66f7cf0942a"
+}

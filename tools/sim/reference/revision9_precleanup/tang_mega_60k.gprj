@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE gowin-fpga-project>
+<Project>
+  <Template>FPGA</Template>
+  <Version>5</Version>
+  <Device name="GW5AT-60B" pn="GW5AT-LV60PG484AC1/I0">gw5at60b-002</Device>
+  <FileList>
+    <File path="src/video_timing_720p.v" type="file.verilog" enable="1"/>
+    <File path="src/display_observer_cdc.v" type="file.verilog" enable="1"/>
+    <File path="src/instrument_dashboard.v" type="file.verilog" enable="1"/>
+    <File path="src/hdmi_instrument_display.v" type="file.verilog" enable="1"/>
+    <File path="src/video_vendor/TMDS_PLL.v" type="file.verilog" enable="1"/>
+    <File path="src/video_vendor/DVI_TX_Top.v" type="file.verilog" enable="1"/>
+
+    <File path="src/plucked_body_filter.v" type="file.verilog" enable="1"/>
+    <File path="src/instrument_body_resonator.v" type="file.verilog" enable="1"/>
+    <File path="src/instrument_body_resonator_tdm.v" type="file.verilog" enable="1"/>
+    <File path="src/audio_scope_capture.v" type="file.verilog" enable="1"/>
+    <File path="src/uart_rx_receiver.v" type="file.verilog" enable="1"/>
+    <File path="src/uart_event_bridge.v" type="file.verilog" enable="1"/>
+    <File path="src/uart_status_tx.v" type="file.verilog" enable="1"/>
+    <File path="src/instrument_config_bank.v" type="file.verilog" enable="1"/>
+    <File path="src/spi_profile_bank.v" type="file.verilog" enable="1"/>
+    <File path="src/spi_master_runtime.v" type="file.verilog" enable="1"/>
+    <File path="src/spi_runtime_bank3.v" type="file.verilog" enable="1"/>
+    <File path="src/spi_scan_scheduler.v" type="file.verilog" enable="1"/>
+    <File path="src/voice_envelope.v" type="file.verilog" enable="1"/>
+    <File path="src/violin_waveguide_voice.v" type="file.verilog" enable="1"/>
+    <File path="src/ukulele_waveguide_voice.v" type="file.verilog" enable="1"/>
+    <File path="src/pt8211_tx.v" type="file.verilog" enable="1"/>
+    <File path="src/pt8211_external_tx.v" type="file.verilog" enable="1"/>
+    <File path="src/latency_probe.v" type="file.verilog" enable="1"/>
+    <File path="src/performance_bank_router.v" type="file.verilog" enable="1"/>
+    <File path="src/violin_expression_bank.v" type="file.verilog" enable="1"/>
+    <File path="src/instrument_bank_core.v" type="file.verilog" enable="1"/>
+    <File path="src/small_room_reverb.v" type="file.verilog" enable="1"/>
+    <File path="src/tang_mega_60k_top.v" type="file.verilog" enable="1"/>
+    <File path="constraints/tang_mega_60k.cst" type="file.cst" enable="1"/>
+    <File path="constraints/tang_mega_60k.sdc" type="file.sdc" enable="1"/>
+  </FileList>
+</Project>

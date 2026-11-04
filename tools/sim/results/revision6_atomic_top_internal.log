@@ -1,0 +1,24 @@
+# vsim -c -lib build/revision6_atomic_top revision6_atomic_top_tb -l sim/results/revision6_atomic_top_internal.log -do "run -all; quit -f" -gEXTERNAL=0 
+# Start time: 17:54:29 on Oct 31,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(79): Failed to find 'w_bank_event' in hierarchical name '/dut/w_bank_event'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(81): Failed to find 'w_bank_sequence' in hierarchical name '/dut/w_bank_sequence'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(84): Failed to find 'w_event_word_complete' in hierarchical name '/dut/w_event_word_complete'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(87): Failed to find 'w_frame_event_sequence' in hierarchical name '/dut/w_frame_event_sequence'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(88): Failed to find 'w_frame_first_sequence' in hierarchical name '/dut/w_frame_first_sequence'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(88): Failed to find 'w_frame_event_count' in hierarchical name '/dut/w_frame_event_count'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(117): Failed to find 'w_frame_pcm' in hierarchical name '/dut/w_frame_pcm'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(127): Failed to find 'w_audio_ready' in hierarchical name '/dut/w_audio_ready'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(138): Failed to find 'w_bank_gates' in hierarchical name '/dut/w_bank_gates'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(144): Failed to find 'w_stale' in hierarchical name '/dut/w_stale'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(152): Failed to find 'u_router' in hierarchical name '/dut/u_router/r_owner'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(152): Failed to find 'u_router' in hierarchical name '/dut/u_router/r_epoch'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(153): Failed to find 'w_bank_notes' in hierarchical name '/dut/w_bank_notes'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(164): Failed to find 'w_audio_underruns' in hierarchical name '/dut/w_audio_underruns'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(164): Failed to find 'w_audio_overruns' in hierarchical name '/dut/w_audio_overruns'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(164): Failed to find 'w_core_deadlines' in hierarchical name '/dut/w_core_deadlines'.
+# ** Error (suppressible): (vopt-7063) sim/revision6_atomic_top_tb.v(167): Failed to find 'w_audio_sample_valid' in hierarchical name '/dut/w_audio_sample_valid'.
+# Optimization failed
+# Error loading design
+# End time: 17:54:30 on Oct 31,2026, Elapsed time: 0:00:01
+# Errors: 17, Warnings: 0

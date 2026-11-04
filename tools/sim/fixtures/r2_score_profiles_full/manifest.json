@@ -1,0 +1,101 @@
+{
+  "schema": "frozen-r2-full-score-fixture-manifest-v1",
+  "generated_utc": "2026-10-04T06:48:22.221869+00:00",
+  "output": "fixtures/r2_score_profiles_full",
+  "script_sha256": "5079f1a27449c612ddac5ae3fd440532fe5895ec6c05268c873d4dee55d161a3",
+  "encoder_helpers_sha256": {
+    "export_score_profiles.py": "de654167d8f21af331498d615b1c2d7369dee0e5a28b1edde151ea429ec8b128",
+    "score_player.py": "6662f31bd34f2c60dd59c398852c14ae26a51623695cc159717929f1fb3f9532",
+    "score_expression.py": "680f368cd641c60bb243f82b50f67c7b468684f953b16a4ec33c48e7311ea527",
+    "score_profile.py": "5e97ea9197d2880b5b83f8da829df90d217fea0f4108a47228f0329bcf85b31b",
+    "performance_protocol.py": "c0e589a17adaa4963871ccaf4d1f163afcea1f559b536268903ddb0d86239a27",
+    "fpga60k_backend.py": "2b8cea43cab2c440b485411615a4aa377ee0a9d82162df2526a8d248f1ec8ae6"
+  },
+  "fixtures": [
+    {
+      "name": "violin_source",
+      "frames": 2916,
+      "duration_seconds": 135.3846153846154,
+      "end_cycles_50mhz": 6769230769,
+      "source_sha256": "27f5417b96167f761a740308e3fa6ad5937681614b2dcbae5d5c833ae30f913e",
+      "counts": {
+        "written_bars": 48,
+        "written_events": 299,
+        "written_pitched_events": 267,
+        "performed_source_events": 295,
+        "performed_pitched_events": 267,
+        "pluck_actions": 0,
+        "bow_rearticulate_actions": 234
+      },
+      "max_serializer_queue_cycles": 173600
+    },
+    {
+      "name": "violin_optimized",
+      "frames": 4136,
+      "duration_seconds": 135.3846153846154,
+      "end_cycles_50mhz": 6769230769,
+      "source_sha256": "27f5417b96167f761a740308e3fa6ad5937681614b2dcbae5d5c833ae30f913e",
+      "counts": {
+        "written_bars": 48,
+        "written_events": 299,
+        "written_pitched_events": 267,
+        "performed_source_events": 295,
+        "performed_pitched_events": 267,
+        "pluck_actions": 0,
+        "bow_rearticulate_actions": 231
+      },
+      "max_serializer_queue_cycles": 173600
+    },
+    {
+      "name": "ukulele_source",
+      "frames": 167,
+      "duration_seconds": 84.70588235294117,
+      "end_cycles_50mhz": 4235294118,
+      "source_sha256": "bd113c22cd0d9e593950380d281eeb7dbe36b8c7c11f8bc29f45c35f0594a9cd",
+      "counts": {
+        "written_bars": 24,
+        "written_events": 203,
+        "written_pitched_events": 198,
+        "performed_source_events": 203,
+        "performed_pitched_events": 198,
+        "pluck_actions": 165,
+        "bow_rearticulate_actions": 0
+      },
+      "max_serializer_queue_cycles": 0
+    },
+    {
+      "name": "ukulele_optimized",
+      "frames": 167,
+      "duration_seconds": 84.70588235294117,
+      "end_cycles_50mhz": 4235294118,
+      "source_sha256": "bd113c22cd0d9e593950380d281eeb7dbe36b8c7c11f8bc29f45c35f0594a9cd",
+      "counts": {
+        "written_bars": 24,
+        "written_events": 203,
+        "written_pitched_events": 198,
+        "performed_source_events": 203,
+        "performed_pitched_events": 198,
+        "pluck_actions": 165,
+        "bow_rearticulate_actions": 0
+      },
+      "max_serializer_queue_cycles": 0
+    }
+  ],
+  "fixture_sha256": {
+    "ukulele_optimized.bytes.hex": "2e6f39555345db91e3e4e38b18cae72d1f30daff562c9842bd92fc14d3c24e12",
+    "ukulele_optimized.frames.hex": "304aa6921b772fadb07a52c3ee5879ccd993063440bd39eb988c8fdcf94fcb4a",
+    "ukulele_optimized.json": "bccd629486bb25ea2a65b8110e4dcbedc039ebc49db159b285412a57ddf8dd33",
+    "ukulele_source.bytes.hex": "9e01b2c71e4cac5a9771d1a70dba42f5bf49cf4fc16f89a56f131b4fcfd91dd5",
+    "ukulele_source.frames.hex": "c0e1be5e13c1a4ab697b7951abb0d02e787454dfb09a6e4de71cfcb51d1d3c89",
+    "ukulele_source.json": "88471fe99960d9a1a7c40fc46a8f7604a4ecf99e9b443cfd14b83dcb80fa2cdf",
+    "violin_optimized.bytes.hex": "51c14788abab28805f35d1345d2c2cff1e7c720161c9888029921c2a04f64433",
+    "violin_optimized.frames.hex": "72cfc23d557b39779c8c4d104a8e67d58107ce30b6d86d3e00394ba6941d8648",
+    "violin_optimized.json": "7a625674c25520115d9e0c085826266aceb39af5e60da4b07ac77fa588f22bc8",
+    "violin_source.bytes.hex": "e6aede4f419b4f1aecfc396759c040764d4e414f253e8a21c8e2531856b149fd",
+    "violin_source.frames.hex": "7110308f4ebfc5f66f00228422b1c2c9195dee98c1b434441838273da0684436",
+    "violin_source.json": "3db6394d0dcc636622500d4b120e279e5e8509e925e880bb4d3bc6debfe409fb"
+  },
+  "physical_com_opened": false,
+  "fpga_programmed": false,
+  "evidence_boundary": "complete original-score bytes and synthetic schedules; ideal accelerated A0, real UART/A1 and board audio remain separate evidence"
+}
